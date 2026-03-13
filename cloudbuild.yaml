@@ -1,0 +1,65 @@
+steps:
+  # 1. Frontend Build
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/wayn-ai-frontend:$COMMIT_SHA', './frontend']
+    id: 'build-frontend'
+
+  # 2. Frontend Push
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/wayn-ai-frontend:$COMMIT_SHA']
+    id: 'push-frontend'
+
+  # 3. Frontend Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayn-ai-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/wayn-ai-frontend:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3' # Seoul region (변경 가능)
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--min-instances'
+      - '1' # 콜드 스타트 방지
+    id: 'deploy-frontend'
+
+  # 4. Backend Build
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/wayn-ai-backend:$COMMIT_SHA', './backend']
+    id: 'build-backend'
+
+  # 5. Backend Push
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/wayn-ai-backend:$COMMIT_SHA']
+    id: 'push-backend'
+
+  # 6. Backend Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayn-ai-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/wayn-ai-backend:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '5001' # 백엔드 타겟 포트 설정
+      - '--min-instances'
+      - '1' # 콜드 스타트 방지
+    id: 'deploy-backend'
+
+images:
+  - 'gcr.io/$PROJECT_ID/wayn-ai-frontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/wayn-ai-backend:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
