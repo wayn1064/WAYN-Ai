@@ -1,12 +1,12 @@
 steps:
   # 1. Frontend Build
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-frontend:$COMMIT_SHA', './frontend']
+    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-frontend:$COMMIT_SHA', './frontend']
     id: 'build-frontend'
 
   # 2. Frontend Push
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-frontend:$COMMIT_SHA']
+    args: ['push', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-frontend:$COMMIT_SHA']
     id: 'push-frontend'
 
   # 3. Frontend Deploy to Cloud Run
@@ -17,7 +17,7 @@ steps:
       - 'deploy'
       - 'wayn-ai-frontend'
       - '--image'
-      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-frontend:$COMMIT_SHA'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-frontend:$COMMIT_SHA'
       - '--region'
       - 'asia-northeast3' # Seoul region
       - '--platform'
@@ -29,12 +29,12 @@ steps:
 
   # 4. Backend Build
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-backend:$COMMIT_SHA', './backend']
+    args: ['build', '-t', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-backend:$COMMIT_SHA', './backend']
     id: 'build-backend'
 
   # 5. Backend Push
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-backend:$COMMIT_SHA']
+    args: ['push', 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-backend:$COMMIT_SHA']
     id: 'push-backend'
 
   # 6. Backend Deploy to Cloud Run
@@ -45,7 +45,7 @@ steps:
       - 'deploy'
       - 'wayn-ai-backend'
       - '--image'
-      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-backend:$COMMIT_SHA'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-backend:$COMMIT_SHA'
       - '--region'
       - 'asia-northeast3'
       - '--platform'
@@ -58,8 +58,8 @@ steps:
     id: 'deploy-backend'
 
 images:
-  - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-frontend:$COMMIT_SHA'
-  - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-repo/wayn-ai-backend:$COMMIT_SHA'
+  - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-frontend:$COMMIT_SHA'
+  - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-backend:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
