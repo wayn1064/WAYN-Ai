@@ -23,6 +23,8 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--port'
+      - '80'
       - '--min-instances'
       - '1' # 콜드 스타트 방지
     id: 'deploy-frontend'
