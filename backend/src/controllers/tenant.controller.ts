@@ -79,3 +79,36 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ error: '가입 신청 처리 중 서버 오류가 발생했습니다.' });
   }
 };
+
+// 승인된(활성화된) 회원병원(Tenant) 목록 조회 (WAYN-Ai 관리자용)
+export const getApprovedTenants = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenants = await prisma.tenant.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+          // 대표 원장님/관리자(ADMIN)를 찾아서 함께 반환 (임시 구현)
+          where: {
+            role: 'ADMIN'
+          },
+          take: 1
+        }
+      }
+    });
+
+    res.status(200).json({ success: true, data: tenants });
+  } catch (error) {
+    console.error('Error fetching approved tenants:', error);
+    res.status(500).json({ success: false, error: '회원병원 목록을 불러오는 중 오류가 발생했습니다.' });
+  }
+};
