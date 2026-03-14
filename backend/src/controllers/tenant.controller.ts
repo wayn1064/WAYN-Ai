@@ -3,7 +3,15 @@ import { prisma } from '../lib/prisma';
 
 export const joinTenant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { hospitalName, email, password } = req.body;
+    const { 
+      hospitalName, 
+      email, 
+      password,
+      businessRegistrationNumber,
+      ceoName,
+      contactNumber,
+      address
+    } = req.body;
 
     if (!hospitalName || !email || !password) {
       res.status(400).json({ error: '병원명, 이메일, 비밀번호는 필수입니다.' });
@@ -32,7 +40,7 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       const user = await tx.user.create({
         data: {
           email,
-          name: '관리자',
+          name: ceoName || '관리자',
           role: 'ADMIN',
           tenantId: tenant.id,
           isActive: false,
@@ -55,7 +63,12 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
           contentData: {
             requestDate: new Date().toISOString(),
             email,
-            hospitalName
+            password,
+            hospitalName,
+            businessRegistrationNumber: businessRegistrationNumber || '',
+            ceoName: ceoName || '',
+            contactNumber: contactNumber || '',
+            address: address || ''
           },
         },
       });

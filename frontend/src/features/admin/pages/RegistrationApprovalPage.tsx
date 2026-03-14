@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { CheckCircle, Clock, Building2, User, Phone, Mail, XCircle } from 'lucide-react';
+import { CheckCircle, Clock, Building2, User, Phone, Mail, XCircle, FileText, MapPin, Lock } from 'lucide-react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 
 // API 통신을 위한 인터페이스 정의
@@ -10,6 +10,9 @@ interface RegistrationRequest {
   ceoName: string;
   contactNumber: string;
   email: string;
+  password?: string;
+  businessRegistrationNumber?: string;
+  address?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requestedAt: string;
 }
@@ -197,22 +200,46 @@ export const RegistrationApprovalPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 py-2">
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <div className="grid grid-cols-2 gap-3 py-2">
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <FileText className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">사업자등록번호</p>
+                    <span className="text-sm font-medium">{selectedRequest.businessRegistrationNumber || '-'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
                   <Phone className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-400 font-bold mb-0.5">연락처</p>
                     <span className="text-sm font-medium">{selectedRequest.contactNumber}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <Mail className="w-5 h-5 text-slate-400" />
+                
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
+                  <MapPin className="w-5 h-5 text-slate-400" />
                   <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">이메일</p>
-                    <span className="text-sm font-medium">{selectedRequest.email}</span>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">주소</p>
+                    <span className="text-sm font-medium">{selectedRequest.address || '-'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Mail className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 이메일(아이디)</p>
+                    <span className="text-sm font-medium break-all">{selectedRequest.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Lock className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 비밀번호</p>
+                    <span className="text-sm font-medium">{selectedRequest.password || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
                   <Clock className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-400 font-bold mb-0.5">요청일시</p>

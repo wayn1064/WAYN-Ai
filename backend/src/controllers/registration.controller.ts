@@ -31,9 +31,12 @@ export const getRegistrations = async (req: Request, res: Response) => {
       return {
         id: req.id,
         hospitalName: req.tenant.name || content.hospitalName,
-        ceoName: req.requester.name || '관리자',
-        contactNumber: content.email || '',
+        ceoName: req.requester.name || content.ceoName || '관리자',
+        contactNumber: content.contactNumber || '',
         email: req.requester.email,
+        password: content.password || '',
+        businessRegistrationNumber: content.businessRegistrationNumber || '',
+        address: content.address || '',
         status: req.status, // 'PENDING', 'APPROVED', 'REJECTED'
         requestedAt: req.requestedAt.toISOString(),
         tenantId: req.tenantId,
