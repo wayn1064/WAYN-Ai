@@ -59,7 +59,7 @@ steps:
       - '--add-cloudsql-instances'
       - '$PROJECT_ID:asia-northeast3:wayn-ai'
       - '--set-env-vars'
-      - 'DATABASE_URL=postgresql://postgres:%21zxasqw12%40@34.64.78.99:5432/WAYN-Ai-db?schema=public'
+      - 'DATABASE_URL=postgresql://postgres:%21zxasqw12%40@localhost/WAYN-Ai-db?host=/cloudsql/$PROJECT_ID:asia-northeast3:wayn-ai'
       - '--no-cpu-throttling'
       - '--min-instances'
       - '1' # 콜드 스타트 방지
