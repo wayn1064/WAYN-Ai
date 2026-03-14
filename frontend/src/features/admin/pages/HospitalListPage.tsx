@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Building2, User, Phone, Mail, CheckCircle } from 'lucide-react';
+import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock } from 'lucide-react';
 
 
 interface RegistrationRequest {
@@ -9,6 +9,9 @@ interface RegistrationRequest {
   ceoName: string;
   contactNumber: string;
   email: string;
+  password?: string;
+  businessRegistrationNumber?: string;
+  address?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requestedAt: string;
 }
@@ -17,6 +20,7 @@ export const HospitalListPage: React.FC = () => {
   const [hospitals, setHospitals] = useState<RegistrationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<RegistrationRequest | null>(null);
 
   useEffect(() => {
     fetchApprovedHospitals();
@@ -75,7 +79,11 @@ export const HospitalListPage: React.FC = () => {
               </tr>
             ) : (
               hospitals.map((hospital) => (
-                <tr key={hospital.id} className="hover:bg-slate-50 transition-colors">
+                <tr 
+                  key={hospital.id} 
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedHospital(hospital)}
+                >
                   <td className="px-6 py-4 text-sm text-slate-500">
                     {new Date(hospital.requestedAt).toLocaleString('ko-KR')}
                   </td>
@@ -106,6 +114,104 @@ export const HospitalListPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Detail Popup Modal */}
+      {selectedHospital && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedHospital(null)}>
+          <div 
+            className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc]">
+              <h3 className="text-xl font-bold text-[#1A365D] flex items-center gap-2">
+                회원병원 세부 정보
+              </h3>
+              <button onClick={() => setSelectedHospital(null)} className="text-slate-400 hover:text-slate-600">
+                <XCircle size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100">
+                  <Building2 className="w-8 h-8 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black text-slate-800 tracking-tight">{selectedHospital.hospitalName}</h4>
+                  <p className="text-sm text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                    <User size={14} /> 대표: {selectedHospital.ceoName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 py-2">
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <FileText className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">사업자등록번호</p>
+                    <span className="text-sm font-medium">{selectedHospital.businessRegistrationNumber || '-'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Phone className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">연락처</p>
+                    <span className="text-sm font-medium">{selectedHospital.contactNumber}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
+                  <MapPin className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">주소</p>
+                    <span className="text-sm font-medium">{selectedHospital.address || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Mail className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 이메일(아이디)</p>
+                    <span className="text-sm font-medium break-all">{selectedHospital.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Lock className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 비밀번호</p>
+                    <span className="text-sm font-medium">{selectedHospital.password || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                  <Clock className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">가입 승인일시</p>
+                    <span className="text-sm font-medium">{new Date(selectedHospital.requestedAt).toLocaleString('ko-KR')}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 text-slate-600 bg-green-50 p-3 rounded-lg border border-green-100 col-span-2 sm:col-span-1">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="text-xs text-green-600 font-bold mb-0.5">현재 상태</p>
+                    <span className="text-sm font-bold text-green-700">활성화됨</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button 
+                onClick={() => setSelectedHospital(null)}
+                className="px-6 py-2 bg-white border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm shadow-sm"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
