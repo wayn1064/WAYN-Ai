@@ -56,6 +56,10 @@ steps:
       - '--allow-unauthenticated'
       - '--port'
       - '5001' # 백엔드 타겟 포트 설정
+      - '--add-cloudsql-instances'
+      - '$PROJECT_ID:asia-northeast3:wayn-ai'
+      - '--set-env-vars'
+      - 'DATABASE_URL=postgresql://postgres:%21zxasqw12%40@localhost/WAYN-Ai-db?host=/cloudsql/$PROJECT_ID:asia-northeast3:wayn-ai'
       - '--no-cpu-throttling'
       - '--min-instances'
       - '1' # 콜드 스타트 방지
