@@ -51,19 +51,29 @@ export const RegistrationApprovalPage: React.FC = () => {
       return;
     }
 
+    const hospitalCode = window.prompt(`${hospitalName} 측에 부여할 고유 '회원병원 ID (예: WAYN-001)'를 입력해주세요.`);
+    if (!hospitalCode) {
+      alert('회원병원 ID 입력이 취소되어 승인이 중단되었습니다.');
+      return;
+    }
+
     try {
       const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      await axios.post(`${BASE_URL}/api/registrations/${id}/approve`);
-      alert(`${hospitalName} 측의 가입이 승인되었습니다. 테넌트 및 관리자 계정이 활성화되었습니다.`);
+      await axios.post(`${BASE_URL}/api/registrations/${id}/approve`, { hospitalCode });
+      alert(`${hospitalName} 측의 가입이 승인되었으며, [${hospitalCode}] 회원병원 ID가 성공적으로 부여되었습니다.`);
       
       if (selectedRequest?.id === id) {
         setSelectedRequest(null);
       }
       
       fetchRequests(); // 목록 새로고침
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to approve registration', err);
-      alert('승인 처리 중 오류가 발생했습니다.');
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert('승인 처리 중 오류가 발생했습니다.');
+      }
     }
   };
 

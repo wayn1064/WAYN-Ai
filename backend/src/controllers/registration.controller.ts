@@ -30,9 +30,9 @@ export const getRegistrations = async (req: Request, res: Response) => {
       const content = req.contentData as any || {};
       return {
         id: req.id,
-        hospitalName: req.tenant.name || content.hospitalCode,
+        hospitalName: req.tenant.name || content.hospitalName,
         ceoName: req.requester.name || '관리자',
-        contactNumber: content.deviceId ? `기기: ${content.deviceId.substring(0, 8)}...` : '',
+        contactNumber: content.email || '',
         email: req.requester.email,
         status: req.status, // 'PENDING', 'APPROVED', 'REJECTED'
         requestedAt: req.requestedAt.toISOString(),
@@ -51,11 +51,17 @@ export const getRegistrations = async (req: Request, res: Response) => {
 // 가입 승인 (본사 관리자용) -> Approval 상태 업데이트 및 비활성 Tenant/User 활성화
 export const approveRegistration = async (req: Request, res: Response) => {
   const id = req.params.id as string;
+  const { hospitalCode } = req.body;
+
+  if (!hospitalCode) {
+    return res.status(400).json({ success: false, error: '회원병원 ID를 입력해야 승인할 수 있습니다.' });
+  }
 
   try {
     // 1. Approval 내역 조회
     const approval = await prisma.approval.findUnique({
       where: { id },
+      include: { requester: true }
     });
 
     if (!approval) {
@@ -65,7 +71,7 @@ export const approveRegistration = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Request is not pending' });
     }
 
-    // 2. Transaction 처리: Approval 승인 + 연관된 Tenant 활성화 + 연관된 User 활성화
+    // 2. Transaction 처리: Approval 승인 + 연관된 Tenant 활성화 및 이름 변경 + 연관된 User 활성화 및 claims 업데이트
     const result = await prisma.$transaction(async (tx) => {
       // 2-1. Approval 상태 변경
       const updatedApproval = await tx.approval.update({
@@ -76,19 +82,25 @@ export const approveRegistration = async (req: Request, res: Response) => {
         },
       });
 
-      // 2-2. 연관된 Tenant 활성화
+      // 2-2. 연관된 Tenant 활성화 및 회원병원 ID로 이름 변경
       const updatedTenant = await tx.tenant.update({
         where: { id: approval.tenantId },
         data: {
           isActive: true,
+          name: hospitalCode // 승인 시 지정한 회원병원 ID 부여
         },
       });
 
-      // 2-3. 연관된 User(대표자) 활성화
+      // 2-3. 연관된 User(대표자) 활성화 및 claims에 회원병원 ID 보관
+      const previousClaims = approval.requester.customClaims as any || {};
       const updatedUser = await tx.user.update({
         where: { id: approval.requesterId },
         data: {
           isActive: true,
+          customClaims: {
+            ...previousClaims,
+            hospitalCode
+          }
         },
       });
 

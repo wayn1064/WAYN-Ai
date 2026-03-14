@@ -3,10 +3,10 @@ import { prisma } from '../lib/prisma';
 
 export const joinTenant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { hospitalCode, email, password, deviceId } = req.body;
+    const { hospitalName, email, password } = req.body;
 
-    if (!hospitalCode || !email || !password || !deviceId) {
-      res.status(400).json({ error: '회원병원 ID, 이메일, 비밀번호, 식별번호는 필수입니다.' });
+    if (!hospitalName || !email || !password) {
+      res.status(400).json({ error: '병원명, 이메일, 비밀번호는 필수입니다.' });
       return;
     }
 
@@ -19,10 +19,10 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
 
     // 트랜잭션을 사용하여 원자성 보장
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Tenant 생성 (승인 전까지 isActive: false)
+      // 1. Tenant 생성 (승인 전까지 isActive: false, 이름은 가입당시 병원명)
       const tenant = await tx.tenant.create({
         data: {
-          name: hospitalCode, // 회원병원 ID를 병원명으로 일단 사용
+          name: hospitalName,
           solutionType: 'DENTi-Ai',
           isActive: false,
         },
@@ -39,7 +39,6 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
           customClaims: {
             role: 'ADMIN',
             accessibleModules: ['all'],
-            allowedDeviceId: deviceId, // 가입 시 등록한 기기 식별번호
             password // 추후 bcrypt 암호화 필요
           },
         },
@@ -49,15 +48,14 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       const approval = await tx.approval.create({
         data: {
           tenantId: tenant.id,
-          title: `[DENTi-Ai] ${hospitalCode} 신규 가입 승인 요청`,
+          title: `[DENTi-Ai] ${hospitalName} 가입 승인 요청`,
           type: 'JOIN_REQUEST',
           status: 'PENDING',
           requesterId: user.id,
           contentData: {
             requestDate: new Date().toISOString(),
             email,
-            hospitalCode,
-            deviceId
+            hospitalName
           },
         },
       });
