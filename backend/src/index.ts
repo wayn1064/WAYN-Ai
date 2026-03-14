@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import tenantRoutes from './routes/tenant.routes';
 import registrationRoutes from './routes/registration.routes';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/auth', authRoutes);
 
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);

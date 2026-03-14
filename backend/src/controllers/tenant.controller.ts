@@ -3,17 +3,17 @@ import { prisma } from '../lib/prisma';
 
 export const joinTenant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { tenantName, solutionType, requesterName, email, contact } = req.body;
+    const { hospitalCode, email, password, deviceId } = req.body;
 
-    if (!tenantName || !solutionType || !requesterName || !email) {
-      res.status(400).json({ error: '필수 입력값이 누락되었습니다.' });
+    if (!hospitalCode || !email || !password || !deviceId) {
+      res.status(400).json({ error: '회원병원 ID, 이메일, 비밀번호, 식별번호는 필수입니다.' });
       return;
     }
 
     // 이메일 중복 확인
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(400).json({ error: '이미 사용 중인 이메일입니다.' });
+      res.status(400).json({ error: '이미 등록된 이메일 또는 병원입니다.' });
       return;
     }
 
@@ -22,8 +22,8 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       // 1. Tenant 생성 (승인 전까지 isActive: false)
       const tenant = await tx.tenant.create({
         data: {
-          name: tenantName,
-          solutionType,
+          name: hospitalCode, // 회원병원 ID를 병원명으로 일단 사용
+          solutionType: 'DENTi-Ai',
           isActive: false,
         },
       });
@@ -32,14 +32,15 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       const user = await tx.user.create({
         data: {
           email,
-          name: requesterName,
+          name: '관리자',
           role: 'ADMIN',
           tenantId: tenant.id,
           isActive: false,
           customClaims: {
             role: 'ADMIN',
             accessibleModules: ['all'],
-            tempContact: contact // 아직 스키마에 연락처 필드가 없으므로 claims에 임시 저장
+            allowedDeviceId: deviceId, // 가입 시 등록한 기기 식별번호
+            password // 추후 bcrypt 암호화 필요
           },
         },
       });
@@ -48,17 +49,15 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       const approval = await tx.approval.create({
         data: {
           tenantId: tenant.id,
-          title: `[${solutionType}] ${tenantName} - ${requesterName} 가입 승인 요청`,
+          title: `[DENTi-Ai] ${hospitalCode} 신규 가입 승인 요청`,
           type: 'JOIN_REQUEST',
           status: 'PENDING',
           requesterId: user.id,
           contentData: {
             requestDate: new Date().toISOString(),
-            contact,
             email,
-            tenantName,
-            requesterName,
-            solutionType
+            hospitalCode,
+            deviceId
           },
         },
       });

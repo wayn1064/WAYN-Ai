@@ -30,9 +30,9 @@ export const getRegistrations = async (req: Request, res: Response) => {
       const content = req.contentData as any || {};
       return {
         id: req.id,
-        hospitalName: req.tenant.name,
-        ceoName: req.requester.name,
-        contactNumber: content.contact || '',
+        hospitalName: req.tenant.name || content.hospitalCode,
+        ceoName: req.requester.name || '관리자',
+        contactNumber: content.deviceId ? `기기: ${content.deviceId.substring(0, 8)}...` : '',
         email: req.requester.email,
         status: req.status, // 'PENDING', 'APPROVED', 'REJECTED'
         requestedAt: req.requestedAt.toISOString(),
