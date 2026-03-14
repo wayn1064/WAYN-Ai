@@ -74,9 +74,12 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error during tenant join request:', error);
-    res.status(500).json({ error: '가입 신청 처리 중 서버 오류가 발생했습니다.' });
+    res.status(500).json({ 
+      error: '가입 신청 처리 중 서버 오류가 발생했습니다.', 
+      details: error.message || String(error)
+    });
   }
 };
 
