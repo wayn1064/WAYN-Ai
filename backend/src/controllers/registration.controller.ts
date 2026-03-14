@@ -116,3 +116,83 @@ export const approveRegistration = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to approve registration' });
   }
 };
+
+// 가입 세부 정보 및 권한 수정 (본사 관리자용)
+export const updateRegistration = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const { 
+    hospitalName, 
+    ceoName, 
+    contactNumber, 
+    address, 
+    businessRegistrationNumber,
+    email,
+    password,
+    accessibleMenus
+  } = req.body;
+
+  try {
+    const approval = await prisma.approval.findUnique({
+      where: { id },
+      include: { requester: true }
+    });
+
+    if (!approval) {
+      return res.status(404).json({ success: false, error: 'Approval request not found' });
+    }
+
+    const previousContent = approval.contentData as any || {};
+    const updatedContent = {
+      ...previousContent,
+      hospitalName: hospitalName || previousContent.hospitalName,
+      ceoName: ceoName || previousContent.ceoName,
+      contactNumber: contactNumber || previousContent.contactNumber,
+      address: address || previousContent.address,
+      businessRegistrationNumber: businessRegistrationNumber || previousContent.businessRegistrationNumber,
+      email: email || previousContent.email,
+      password: password || previousContent.password,
+      accessibleMenus: accessibleMenus || previousContent.accessibleMenus || []
+    };
+
+    const previousClaims = approval.requester.customClaims as any || {};
+    const updatedClaims = {
+      ...previousClaims,
+      accessibleMenus: accessibleMenus || previousClaims.accessibleMenus || []
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update Approval Content
+      const updatedApproval = await tx.approval.update({
+        where: { id },
+        data: {
+          contentData: updatedContent
+        }
+      });
+
+      // 2. Update User (Requester) Information & Claims
+      const updatedUser = await tx.user.update({
+        where: { id: approval.requesterId },
+        data: {
+          name: ceoName || approval.requester.name,
+          email: email || approval.requester.email,
+          customClaims: updatedClaims
+        }
+      });
+
+      // 3. Update Tenant Name if changed
+      const updatedTenant = await tx.tenant.update({
+        where: { id: approval.tenantId },
+        data: {
+          name: hospitalName || undefined
+        }
+      });
+
+      return { approval: updatedApproval, user: updatedUser, tenant: updatedTenant };
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error updating registration:', error);
+    res.status(500).json({ success: false, error: 'Failed to update registration' });
+  }
+};

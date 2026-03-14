@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock } from 'lucide-react';
+import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock, Save, Edit2 } from 'lucide-react';
 
 
 interface RegistrationRequest {
@@ -12,6 +12,7 @@ interface RegistrationRequest {
   password?: string;
   businessRegistrationNumber?: string;
   address?: string;
+  accessibleMenus?: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requestedAt: string;
 }
@@ -21,6 +22,10 @@ export const HospitalListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedHospital, setSelectedHospital] = useState<RegistrationRequest | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<RegistrationRequest>>({});
+
+  const MENU_OPTIONS = ['원장실', '경영지원실', '진료실', '기공실', '데스크', '중앙공급실', '상담실', '마이오피스'];
 
   useEffect(() => {
     fetchApprovedHospitals();
@@ -38,6 +43,53 @@ export const HospitalListPage: React.FC = () => {
       setError('회원병원 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditClick = (hospital: RegistrationRequest) => {
+    setSelectedHospital(hospital);
+    setFormData({
+      hospitalName: hospital.hospitalName,
+      ceoName: hospital.ceoName,
+      contactNumber: hospital.contactNumber,
+      email: hospital.email,
+      password: hospital.password || '',
+      businessRegistrationNumber: hospital.businessRegistrationNumber || '',
+      address: hospital.address || '',
+      accessibleMenus: hospital.accessibleMenus || []
+    });
+    setIsEditing(false);
+  };
+
+  const handleMenuToggle = (menu: string) => {
+    setFormData(prev => {
+      const menus = prev.accessibleMenus || [];
+      if (menus.includes(menu)) {
+        return { ...prev, accessibleMenus: menus.filter(m => m !== menu) };
+      } else {
+        return { ...prev, accessibleMenus: [...menus, menu] };
+      }
+    });
+  };
+
+  const handleSave = async () => {
+    if (!selectedHospital) return;
+    
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.put(`${BASE_URL}/api/registrations/${selectedHospital.id}`, formData);
+      alert('회원병원 정보가 성공적으로 수정되었습니다.');
+      setIsEditing(false);
+      fetchApprovedHospitals(); // 목록 새로고침
+      
+      // Update selected hospital to reflect new data
+      setSelectedHospital({
+        ...selectedHospital,
+        ...formData
+      } as RegistrationRequest);
+    } catch (err) {
+      console.error('Failed to update hospital info', err);
+      alert('세부 정보 수정 중 오류가 발생했습니다.');
     }
   };
 
@@ -103,7 +155,13 @@ export const HospitalListPage: React.FC = () => {
                       <span className="flex items-center gap-2"><Mail className="w-3 h-3 text-slate-400" /> {hospital.email}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 flex justify-end gap-2">
+                  <td className="px-6 py-4 flex justify-end gap-3">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditClick(hospital); }}
+                      className="px-3 py-1.5 flex items-center gap-1 bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors text-xs font-bold rounded-lg shadow-sm"
+                    >
+                      <Edit2 size={14} /> 수정
+                    </button>
                     <span className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded-full">
                       <CheckCircle size={14} /> 활성
                     </span>
@@ -117,93 +175,229 @@ export const HospitalListPage: React.FC = () => {
 
       {/* Detail Popup Modal */}
       {selectedHospital && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedHospital(null)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setSelectedHospital(null)}>
           <div 
-            className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all"
+            className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl transform transition-all my-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc] sticky top-0 z-10">
               <h3 className="text-xl font-bold text-[#1A365D] flex items-center gap-2">
-                회원병원 세부 정보
+                회원병원 세부 정보 
+                {isEditing && <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full border border-yellow-200">수정 모드</span>}
               </h3>
-              <button onClick={() => setSelectedHospital(null)} className="text-slate-400 hover:text-slate-600">
-                <XCircle size={24} />
-              </button>
+              <div className="flex items-center gap-2">
+                {!isEditing ? (
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <Edit2 size={16} /> 수정하기
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleSave}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                  >
+                    <Save size={16} /> 저장하기
+                  </button>
+                )}
+                <button onClick={() => { setSelectedHospital(null); setIsEditing(false); }} className="text-slate-400 hover:text-slate-600 p-1">
+                  <XCircle size={24} />
+                </button>
+              </div>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              {/* Header Info */}
               <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100">
+                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 flex-shrink-0">
                   <Building2 className="w-8 h-8 text-blue-600" />
                 </div>
-                <div>
-                  <h4 className="text-xl font-black text-slate-800 tracking-tight">{selectedHospital.hospitalName}</h4>
-                  <p className="text-sm text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                    <User size={14} /> 대표: {selectedHospital.ceoName}
+                <div className="flex-1">
+                  {isEditing ? (
+                    <input 
+                      type="text" 
+                      value={formData.hospitalName || ''} 
+                      onChange={(e) => setFormData({...formData, hospitalName: e.target.value})}
+                      className="text-xl font-black text-slate-800 tracking-tight bg-white border border-blue-300 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      placeholder="병원명"
+                    />
+                  ) : (
+                    <h4 className="text-xl font-black text-slate-800 tracking-tight">{selectedHospital.hospitalName}</h4>
+                  )}
+                  <p className="text-sm text-slate-500 mt-2 flex items-center gap-1 font-medium">
+                    <User size={14} /> 대표: 
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.ceoName || ''} 
+                        onChange={(e) => setFormData({...formData, ceoName: e.target.value})}
+                        className="bg-white border border-blue-300 rounded md px-2 py-0.5 ml-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-32"
+                      />
+                    ) : (
+                      selectedHospital.ceoName
+                    )}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 py-2">
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <FileText className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">사업자등록번호</p>
-                    <span className="text-sm font-medium">{selectedHospital.businessRegistrationNumber || '-'}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Phone className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">연락처</p>
-                    <span className="text-sm font-medium">{selectedHospital.contactNumber}</span>
+              {/* Grid Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <FileText className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 w-full">
+                    <p className="text-xs text-slate-400 font-bold mb-1">사업자등록번호</p>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.businessRegistrationNumber || ''} 
+                        onChange={(e) => setFormData({...formData, businessRegistrationNumber: e.target.value})}
+                        className="w-full bg-white border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium">{selectedHospital.businessRegistrationNumber || '-'}</span>
+                    )}
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
-                  <MapPin className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">주소</p>
-                    <span className="text-sm font-medium">{selectedHospital.address || '-'}</span>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 w-full">
+                    <p className="text-xs text-slate-400 font-bold mb-1">연락처</p>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.contactNumber || ''} 
+                        onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
+                        className="w-full bg-white border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium">{selectedHospital.contactNumber}</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 shadow-sm">
+                  <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 w-full relative">
+                    <p className="text-xs text-slate-400 font-bold mb-1">주소</p>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.address || ''} 
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        className="w-full bg-white border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium block pr-8">{selectedHospital.address || '-'}</span>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Mail className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 이메일(아이디)</p>
-                    <span className="text-sm font-medium break-all">{selectedHospital.email}</span>
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 w-full">
+                    <p className="text-xs text-slate-400 font-bold mb-1">마스터 이메일(아이디)</p>
+                    {isEditing ? (
+                      <input 
+                        type="email" 
+                        value={formData.email || ''} 
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        className="w-full bg-white border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium break-all">{selectedHospital.email}</span>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Lock className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 비밀번호</p>
-                    <span className="text-sm font-medium">{selectedHospital.password || '-'}</span>
+                
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <Lock className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 w-full">
+                    <p className="text-xs text-slate-400 font-bold mb-1">마스터 비밀번호</p>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.password || ''} 
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        className="w-full bg-white border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium">{selectedHospital.password || '-'}</span>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Clock className="w-5 h-5 text-slate-400" />
+                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <Clock className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">가입 승인일시</p>
+                    <p className="text-xs text-slate-400 font-bold mb-1">가입 승인일시</p>
                     <span className="text-sm font-medium">{new Date(selectedHospital.requestedAt).toLocaleString('ko-KR')}</span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 text-slate-600 bg-green-50 p-3 rounded-lg border border-green-100 col-span-2 sm:col-span-1">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                <div className="flex items-center gap-3 text-slate-600 bg-green-50 p-4 rounded-xl border border-green-100 col-span-2 sm:col-span-1 shadow-sm">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-green-600 font-bold mb-0.5">현재 상태</p>
+                    <p className="text-xs text-green-600 font-bold mb-1">현재 상태</p>
                     <span className="text-sm font-bold text-green-700">활성화됨</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Permissions (Accessible Menus) */}
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-blue-600" />
+                    메뉴 권한 설정
+                  </h4>
+                  <span className="text-xs text-slate-500 font-medium px-2 py-1 bg-slate-100 rounded-md">
+                    현재 {(isEditing ? formData.accessibleMenus?.length : selectedHospital.accessibleMenus?.length) || 0}개 메뉴 허용
+                  </span>
+                </div>
+                
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {MENU_OPTIONS.map(menu => {
+                      const isChecked = isEditing 
+                        ? (formData.accessibleMenus || []).includes(menu)
+                        : (selectedHospital.accessibleMenus || []).includes(menu);
+                        
+                      return (
+                        <label 
+                          key={menu} 
+                          className={`flex items-center gap-2.5 p-3 rounded-lg border transition-all ${
+                            isEditing ? 'cursor-pointer hover:bg-white hover:border-blue-300' : 'cursor-default'
+                          } ${isChecked ? 'bg-white border-blue-500 shadow-sm' : 'border-slate-200 opacity-60'}`}
+                        >
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                            checked={isChecked}
+                            onChange={() => isEditing && handleMenuToggle(menu)}
+                            disabled={!isEditing}
+                          />
+                          <span className={`text-sm font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
+                            {menu}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {isEditing && (
+                     <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5">
+                       <CheckCircle size={12} className="text-blue-500" /> 
+                       체크 해제된 메뉴는 해당 병원 접속 시 자동으로 숨겨지거나 접근이 차단됩니다.
+                     </p>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
               <button 
-                onClick={() => setSelectedHospital(null)}
+                onClick={() => { setSelectedHospital(null); setIsEditing(false); }}
                 className="px-6 py-2 bg-white border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm shadow-sm"
               >
                 닫기
