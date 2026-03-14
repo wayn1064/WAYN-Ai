@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Users, Settings, LogOut, Building2 } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Building2 } from 'lucide-react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
@@ -68,20 +68,6 @@ export const Sidebar: React.FC = () => {
           <span className="flex-1">가입 승인 관리</span>
           {/* Notification Badge Mock */}
           <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
-        </NavLink>
-
-        <NavLink
-          to="/denti-dashboard/users"
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
-              isActive 
-                ? 'bg-blue-600/30 text-white font-bold' 
-                : 'text-blue-200 hover:bg-white/10 hover:text-white'
-            }`
-          }
-        >
-          <Users size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
-          <span className="flex-1">사용자 목록</span>
         </NavLink>
 
         <NavLink
