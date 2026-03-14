@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { CheckSquare, Building2, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Building2, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
@@ -39,6 +39,21 @@ export const AdminSidebar: React.FC = () => {
 
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-2">
+        <NavLink
+          to="/denti-dashboard"
+          end
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
+              isActive 
+                ? 'bg-blue-600/30 text-white font-bold' 
+                : 'text-blue-200 hover:bg-white/10 hover:text-white'
+            }`
+          }
+        >
+          <LayoutDashboard size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <span className="flex-1">대시보드</span>
+        </NavLink>
+
         <NavLink
           to="/admin/registrations"
           className={({ isActive }) =>
