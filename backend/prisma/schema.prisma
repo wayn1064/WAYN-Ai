@@ -66,3 +66,18 @@ model Approval {
   requester   User     @relation("ApprovalOwner", fields: [requesterId], references: [id])
   approver    User?    @relation("ApprovalApprover", fields: [approverId], references: [id])
 }
+
+// ---------------------------------------------------------------------------
+// 4. RegistrationRequest (위성 시스템 가입 요청 내역)
+// DENTi-Ai 등에서 보낸 가입 문의/요청을 저장합니다.
+// ---------------------------------------------------------------------------
+model RegistrationRequest {
+  id            String   @id @default(uuid())
+  hospitalName  String
+  ceoName       String
+  contactNumber String
+  email         String
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  requestedAt   DateTime @default(now())
+  resolvedAt    DateTime?
+}
