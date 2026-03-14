@@ -24,7 +24,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
   const navigate = useNavigate();
 
   // License checking (mocked via AuthContext custom claims)
-  const hasAccess = currentUser?.customClaims.accessibleModules.includes(id);
+  const hasAccess = currentUser?.customClaims.accessibleModules.includes('ALL') || currentUser?.customClaims.accessibleModules.includes(id);
 
   // If the module is not active yet (Coming Soon) or user doesn't have access, disable it.
   const isClickable = isActive && hasAccess;
