@@ -31,7 +31,8 @@ export const RegistrationApprovalPage: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/registrations');
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const response = await axios.get(`${BASE_URL}/api/registrations`);
       setRequests(response.data.data.filter((req: RegistrationRequest) => req.status === 'PENDING'));
       setError(null);
     } catch (err) {
@@ -51,8 +52,9 @@ export const RegistrationApprovalPage: React.FC = () => {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/registrations/${id}/approve`);
-      alert(`${hospitalName} 측의 가입이 승인되었습니다. 테넌트 및 관리자 계정이 생성되었습니다.`);
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.post(`${BASE_URL}/api/registrations/${id}/approve`);
+      alert(`${hospitalName} 측의 가입이 승인되었습니다. 테넌트 및 관리자 계정이 활성화되었습니다.`);
       
       if (selectedRequest?.id === id) {
         setSelectedRequest(null);

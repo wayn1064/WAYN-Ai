@@ -25,7 +25,8 @@ export const HospitalListPage: React.FC = () => {
   const fetchApprovedHospitals = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/registrations');
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const response = await axios.get(`${BASE_URL}/api/registrations`);
       setHospitals(response.data.data.filter((req: RegistrationRequest) => req.status === 'APPROVED'));
       setError(null);
     } catch (err) {
