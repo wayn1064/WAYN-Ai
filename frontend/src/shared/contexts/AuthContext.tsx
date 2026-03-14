@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Role = 'ADMIN' | 'USER' | 'GUEST';
 
@@ -14,26 +14,50 @@ export interface User {
 
 interface AuthContextType {
   currentUser: User | null;
+  login: (user: User) => void;
+  logout: () => void;
 }
-
-const mockUser: User = {
-  id: 'u1',
-  name: '김원장',
-  customClaims: {
-    role: 'ADMIN',
-    // 'DENTi-Ai' 만 접근 가능하게 라이선스 모사. LOGiS-Ai 등은 미포함.
-    accessibleModules: ['DENTi-Ai'], 
-    tenantId: 'denti-a-001',
-  },
-};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// LocalStorage key for persisting the mock session
+const AUTH_STORAGE_KEY = 'wayn_ai_auth_session';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser] = useState<User | null>(mockUser);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    // Check local storage for existing session on initial load
+    const storedSession = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (storedSession) {
+      try {
+        return JSON.parse(storedSession);
+      } catch (e) {
+        console.error('Failed to parse stored session', e);
+      }
+    }
+    return null; // 초기 상태는 null (로그인 안 됨)
+  });
+
+  const login = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  // Keep localStorage synced if state changes
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
+  }, [currentUser]);
 
   return (
-    <AuthContext.Provider value={{ currentUser }}>
+    <AuthContext.Provider value={{ currentUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
