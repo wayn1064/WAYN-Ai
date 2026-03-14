@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import tenantRoutes from './routes/tenant.routes';
 
 dotenv.config();
 
@@ -13,6 +14,8 @@ const PORT = process.env.PORT || 5000;
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'WAYN-Ai' });
 });
+
+app.use('/api/tenants', tenantRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

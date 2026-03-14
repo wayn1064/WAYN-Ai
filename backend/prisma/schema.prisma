@@ -1,13 +1,67 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+// ---------------------------------------------------------------------------
+// 1. Tenant (테넌트/병원/가맹점 마스터 관리)
+// 모든 프랜차이즈 및 병원 클라이언트는 Tenant로 귀속됩니다.
+// ---------------------------------------------------------------------------
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String   // 예: "서울치과", "강남 WAYN카페"
+  solutionType String  // 예: "DENTi-Ai", "CAFEiN-Ai", "LOGiS-Ai"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  approvals   Approval[]
+}
+
+// ---------------------------------------------------------------------------
+// 2. User (사용자 계정 및 Identity Platform 정보)
+// 본사의 최고 관리자이거나 특정 병원에 소속된 직원입니다.
+// ---------------------------------------------------------------------------
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  role           String   // 예: "ADMIN", "DOCTOR", "DESK", "USER"
+  tenantId       String?  // null이면 본사(WAYN-Ai) 소속, 값이 있으면 가맹점 소속
+  customClaims   Json?    // 접근 가능한 모듈 등의 권한 (Identity Platform 모사)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant         Tenant?  @relation(fields: [tenantId], references: [id])
+  approvalsOwner Approval[] @relation("ApprovalOwner")
+  approvalsApprover Approval[] @relation("ApprovalApprover")
+}
+
+// ---------------------------------------------------------------------------
+// 3. Approval (중앙 공통 결재 워크플로우 테이블)
+// 연차, 가입 승인, 발주 등 모든 형태의 결재를 단일 테이블에서 추적합니다.
+// ---------------------------------------------------------------------------
+model Approval {
+  id          String   @id @default(uuid())
+  tenantId    String
+  title       String   // 예: "김원장 가입 승인 요청", "휴가 신청서"
+  type        String   // 예: "JOIN_REQUEST", "VACATION", "INVENTORY"
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  requesterId String
+  approverId  String?
+  contentData Json?    // 결재 상세 내용(연차 일자, 가입 신청자 정보 등)
+  
+  requestedAt DateTime @default(now())
+  resolvedAt  DateTime?
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  requester   User     @relation("ApprovalOwner", fields: [requesterId], references: [id])
+  approver    User?    @relation("ApprovalApprover", fields: [approverId], references: [id])
 }

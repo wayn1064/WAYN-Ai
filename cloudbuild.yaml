@@ -61,21 +61,7 @@ steps:
       - '1' # 콜드 스타트 방지
     id: 'deploy-backend'
 
-  # 7. Add IAM policy binding for unauthenticated access
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'services'
-      - 'add-iam-policy-binding'
-      - 'wayn-ai-backend'
-      - '--region'
-      - 'asia-northeast3'
-      - '--member'
-      - 'allUsers'
-      - '--role'
-      - 'roles/run.invoker'
-    id: 'iam-backend'
+
 
 images:
   - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/wayn-ai-repo/wayn-ai-frontend:$COMMIT_SHA'
