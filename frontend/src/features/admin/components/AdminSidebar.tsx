@@ -1,15 +1,15 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Users, Settings, LogOut, Building2 } from 'lucide-react';
+import { CheckSquare, Building2, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
-export const Sidebar: React.FC = () => {
+export const AdminSidebar: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    mockPubSub.publish('navigation', { from: 'denti', to: 'gateway' });
+    mockPubSub.publish('navigation', { from: 'admin', to: 'gateway' });
     navigate('/');
   };
 
@@ -18,15 +18,15 @@ export const Sidebar: React.FC = () => {
       {/* Brand Header */}
       <div className="h-20 flex items-center px-6 border-b border-[#2a4a7f]">
         <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center mr-3 shadow-sm">
-          <span className="text-white font-black text-lg tracking-tighter">D</span>
+          <span className="text-white font-black text-lg tracking-tighter">W</span>
         </div>
         <div>
-          <h2 className="text-xl font-black tracking-tight leading-tight">DENTi-Ai</h2>
-          <p className="text-[10px] text-blue-300 font-medium">Dental Auto System</p>
+          <h2 className="text-xl font-black tracking-tight leading-tight">WAYN-Ai Admin</h2>
+          <p className="text-[10px] text-blue-300 font-medium">Enterprise Management</p>
         </div>
       </div>
 
-      {/* User Info (Mock) */}
+      {/* User Info */}
       <div className="px-6 py-5 bg-[#152e50] border-b border-[#2a4a7f]">
         <p className="text-sm font-bold">{currentUser?.name} <span className="text-xs font-normal text-blue-300">님</span></p>
         <div className="flex items-center gap-2 mt-1">
@@ -40,22 +40,7 @@ export const Sidebar: React.FC = () => {
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-2">
         <NavLink
-          to="/denti-dashboard"
-          end
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
-              isActive 
-                ? 'bg-blue-600/30 text-white font-bold' 
-                : 'text-blue-200 hover:bg-white/10 hover:text-white'
-            }`
-          }
-        >
-          <LayoutDashboard size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
-          대시보드
-        </NavLink>
-
-        <NavLink
-          to="/denti-dashboard/approvals"
+          to="/admin/registrations"
           className={({ isActive }) =>
             `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
               isActive 
@@ -66,22 +51,6 @@ export const Sidebar: React.FC = () => {
         >
           <CheckSquare size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
           <span className="flex-1">가입 승인 관리</span>
-          {/* Notification Badge Mock */}
-          <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
-        </NavLink>
-
-        <NavLink
-          to="/denti-dashboard/users"
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
-              isActive 
-                ? 'bg-blue-600/30 text-white font-bold' 
-                : 'text-blue-200 hover:bg-white/10 hover:text-white'
-            }`
-          }
-        >
-          <Users size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
-          <span className="flex-1">사용자 목록</span>
         </NavLink>
 
         <NavLink
