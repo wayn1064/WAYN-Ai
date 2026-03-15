@@ -21,6 +21,12 @@ export const createRegistration = async (req: Request, res: Response) => {
     const defaultMenus = accessibleMenus || ['원장실', '경영지원실', '진료실', '기공실', '데스크', '중앙공급실', '상담실', '마이오피스'];
 
     const result = await prisma.$transaction(async (tx) => {
+      // 0. Check duplicate email
+      const existingUser = await tx.user.findUnique({ where: { email } });
+      if (existingUser) {
+        throw new Error('DUPLICATE_EMAIL');
+      }
+
       // 1. Create active tenant
       const newTenant = await tx.tenant.create({
         data: {
@@ -72,9 +78,12 @@ export const createRegistration = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({ success: true, data: result });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'DUPLICATE_EMAIL') {
+      return res.status(400).json({ success: false, error: '이미 사용 중인 마스터 이메일입니다.' });
+    }
     console.error('Error creating registration:', error);
-    res.status(500).json({ success: false, error: 'Failed to create registration' });
+    res.status(500).json({ success: false, error: '신규 거래처 등록 중 서버 단에서 오류가 발생했습니다.' });
   }
 };
 
