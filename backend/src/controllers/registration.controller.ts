@@ -47,7 +47,8 @@ export const createRegistration = async (req: Request, res: Response) => {
           customClaims: {
             role: 'ADMIN',
             accessibleMenus: defaultMenus,
-            hospitalCode: hospitalName
+            hospitalCode: hospitalName,
+            password: password || ''
           }
         }
       });
@@ -233,7 +234,8 @@ export const updateRegistration = async (req: Request, res: Response) => {
     const previousClaims = approval.requester.customClaims as any || {};
     const updatedClaims = {
       ...previousClaims,
-      accessibleMenus: accessibleMenus || previousClaims.accessibleMenus || []
+      accessibleMenus: accessibleMenus || previousClaims.accessibleMenus || [],
+      password: updatedContent.password
     };
 
     const result = await prisma.$transaction(async (tx) => {
