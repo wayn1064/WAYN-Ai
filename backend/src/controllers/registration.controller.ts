@@ -114,6 +114,7 @@ export const getRegistrations = async (req: Request, res: Response) => {
         password: content.password || '',
         businessRegistrationNumber: content.businessRegistrationNumber || '',
         address: content.address || '',
+        accessibleMenus: content.accessibleMenus || [],
         status: req.status, // 'PENDING', 'APPROVED', 'REJECTED'
         requestedAt: req.requestedAt.toISOString(),
         tenantId: req.tenantId,
