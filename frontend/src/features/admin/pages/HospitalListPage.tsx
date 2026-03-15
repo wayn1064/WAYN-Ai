@@ -110,9 +110,10 @@ export const HospitalListPage: React.FC = () => {
         accessibleMenus: ['원장실', '경영지원실', '데스크']
       });
       fetchApprovedHospitals(); // 목록 새로고침
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create new hospital', err);
-      alert('신규 거래처 등록 중 오류가 발생했습니다.');
+      const errorMessage = err.response?.data?.error || '신규 거래처 등록 중 오류가 발생했습니다.';
+      alert(errorMessage);
     }
   };
 
