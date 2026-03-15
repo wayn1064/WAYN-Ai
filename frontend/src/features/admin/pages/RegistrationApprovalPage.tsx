@@ -188,84 +188,121 @@ export const RegistrationApprovalPage: React.FC = () => {
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                <div className="w-16 h-16 bg-[#1A365D]/5 rounded-xl flex items-center justify-center border border-[#1A365D]/10">
-                  <Building2 className="w-8 h-8 text-[#1A365D]" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-slate-800 tracking-tight">{selectedRequest.hospitalName}</h4>
-                  <p className="text-sm text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                    <User size={14} /> 대표: {selectedRequest.ceoName}
-                  </p>
-                </div>
-              </div>
+            <div className="p-6 space-y-6">
+              {/* 1. 병원 기본 정보 */}
+              <section>
+                <h4 className="text-sm font-bold text-[#1A365D] mb-3 flex items-center gap-2 border-b pb-2">
+                  <Building2 className="w-4 h-4" />
+                  병원 기본 정보
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <FileText className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">사업자등록번호</p>
+                      <span className="text-sm font-medium">{selectedRequest.businessRegistrationNumber || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <Building2 className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">병원 이름</p>
+                      <span className="text-sm font-medium">{selectedRequest.hospitalName || '-'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <User className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">대표원장 이름</p>
+                      <span className="text-sm font-medium">{selectedRequest.ceoName || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">연락처 (핸드폰번호)</p>
+                      <span className="text-sm font-medium">{selectedRequest.contactNumber || '-'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">주소</p>
+                      <span className="text-sm font-medium">{selectedRequest.address || '-'}</span>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3 py-2">
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <FileText className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">사업자등록번호</p>
-                    <span className="text-sm font-medium">{selectedRequest.businessRegistrationNumber || '-'}</span>
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">요청일</p>
+                      <span className="text-sm font-medium">{new Date(selectedRequest.requestedAt).toLocaleString('ko-KR')}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Phone className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">연락처</p>
-                    <span className="text-sm font-medium">{selectedRequest.contactNumber}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
-                  <MapPin className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">주소</p>
-                    <span className="text-sm font-medium">{selectedRequest.address || '-'}</span>
-                  </div>
-                </div>
+              </section>
 
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Mail className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 아이디</p>
-                    <span className="text-sm font-medium break-all">{selectedRequest.email}</span>
+              {/* 2. 최고 관리자 계정 */}
+              <section>
+                <h4 className="text-sm font-bold text-[#1A365D] mb-3 flex items-center gap-2 border-b pb-2">
+                  <User className="w-4 h-4" />
+                  최고 관리자 계정
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 아이디</p>
+                      <span className="text-sm font-medium break-all">{selectedRequest.email || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
+                    <Lock className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 비밀번호</p>
+                      <span className="text-sm font-medium">{selectedRequest.password || '-'}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
-                  <Lock className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 비밀번호</p>
-                    <span className="text-sm font-medium">{selectedRequest.password || '-'}</span>
-                  </div>
-                </div>
+              </section>
 
-                <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
-                  <Clock className="w-5 h-5 text-slate-400" />
-                  <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">요청일</p>
-                    <span className="text-sm font-medium">{new Date(selectedRequest.requestedAt).toLocaleString('ko-KR')}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
-                  <Layers className="w-5 h-5 text-slate-400 mt-1" />
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-400 font-bold mb-2">사용할 솔루션</p>
-                    {selectedRequest.accessibleMenus && selectedRequest.accessibleMenus.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedRequest.accessibleMenus.map((menu, idx) => (
-                          <span key={idx} className="px-2 py-1 bg-blue-100 text-[#1A365D] text-xs font-semibold rounded-full border border-blue-200">
-                            {menu}
+              {/* 3. 사용할 솔루션 선택 */}
+              <section>
+                <h4 className="text-sm font-bold text-[#1A365D] mb-3 flex items-center gap-2 border-b pb-2">
+                  <Layers className="w-4 h-4" />
+                  사용할 솔루션
+                </h4>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  {selectedRequest.accessibleMenus && selectedRequest.accessibleMenus.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRequest.accessibleMenus.map((menuId, idx) => {
+                        // 영문 ID를 홈페이지 폼과 같은 한글 메뉴명으로 매핑 (기존 방식인 한글 데이터도 그대로 호환됨)
+                        const menuMap: Record<string, string> = {
+                          director: '원장실',
+                          management: '경영지원실',
+                          clinic: '진료실',
+                          desk: '데스크',
+                          supply: '중앙공급실',
+                          lab: '기공실',
+                          counsel: '상담실',
+                          myoffice: '마이오피스',
+                        };
+                        const displayName = menuMap[menuId] || menuId;
+                        return (
+                          <span key={idx} className="px-2.5 py-1 bg-blue-100 text-[#1A365D] text-xs font-bold rounded-full border border-blue-200 shadow-sm flex items-center gap-1.5">
+                            <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
+                            {displayName}
                           </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-slate-400">선택한 솔루션 없음</span>
-                    )}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-slate-400 block p-2 text-center font-medium">선택된 솔루션이 없습니다.</span>
+                  )}
                 </div>
-              </div>
+              </section>
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
