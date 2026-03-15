@@ -37,7 +37,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (
-      user.tenant.businessRegistrationNumber !== hospitalCode && 
+      (user.tenant as any).businessRegistrationNumber !== hospitalCode && 
       customClaims.hospitalCode !== hospitalCode &&
       businessRegistrationNumber !== hospitalCode
     ) {
@@ -69,6 +69,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         role: user.role,
         tenantId: user.tenant.id,
         hospitalName: user.tenant.name,
+        accessibleMenus: customClaims.accessibleMenus || [],
         token: 'mock-jwt-token-for-' + user.id
       }
     });
