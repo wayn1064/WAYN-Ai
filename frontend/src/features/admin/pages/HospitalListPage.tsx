@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock, Save, Edit2 } from 'lucide-react';
+import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock, Save, Edit2, Plus } from 'lucide-react';
 
 
 interface RegistrationRequest {
@@ -24,6 +24,12 @@ export const HospitalListPage: React.FC = () => {
   const [selectedHospital, setSelectedHospital] = useState<RegistrationRequest | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<RegistrationRequest>>({});
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newClientData, setNewClientData] = useState<Partial<RegistrationRequest>>({
+    status: 'APPROVED',
+    accessibleMenus: ['원장실', '경영지원실', '데스크']
+  });
 
   const MENU_OPTIONS = ['원장실', '경영지원실', '진료실', '기공실', '데스크', '중앙공급실', '상담실', '마이오피스'];
 
@@ -93,11 +99,48 @@ export const HospitalListPage: React.FC = () => {
     }
   };
 
+  const handleCreateClient = async () => {
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.post(`${BASE_URL}/api/registrations`, newClientData);
+      alert('신규 거래처가 성공적으로 등록되었습니다.');
+      setShowAddModal(false);
+      setNewClientData({
+        status: 'APPROVED',
+        accessibleMenus: ['원장실', '경영지원실', '데스크']
+      });
+      fetchApprovedHospitals(); // 목록 새로고침
+    } catch (err) {
+      console.error('Failed to create new hospital', err);
+      alert('신규 거래처 등록 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleNewClientMenuToggle = (menu: string) => {
+    setNewClientData(prev => {
+      const menus = prev.accessibleMenus || [];
+      if (menus.includes(menu)) {
+        return { ...prev, accessibleMenus: menus.filter(m => m !== menu) };
+      } else {
+        return { ...prev, accessibleMenus: [...menus, menu] };
+      }
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto animate-fade-in-up space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#1A365D] tracking-tight">회원병원 목록</h1>
-        <p className="text-slate-500 mt-2">DENTi-Ai 시스템 가입 승인이 완료되어 활성화된 회원병원 목록입니다.</p>
+      <div className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-[#1A365D] tracking-tight">회원병원 목록</h1>
+          <p className="text-slate-500 mt-2">DENTi-Ai 시스템 가입 승인이 완료되어 활성화된 회원병원 목록입니다.</p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          <Plus size={18} />
+          신규 거래처 추가
+        </button>
       </div>
 
       {error && (
@@ -172,6 +215,147 @@ export const HospitalListPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Add New Client Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShowAddModal(false)}>
+          <div 
+            className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl transform transition-all my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc] sticky top-0 z-10">
+              <h3 className="text-xl font-bold text-[#1A365D] flex items-center gap-2">
+                신규 거래처 추가
+              </h3>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleCreateClient}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                >
+                  <Save size={16} /> 추가하기
+                </button>
+                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                  <XCircle size={24} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">병원명 (고객사명) *</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.hospitalName || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, hospitalName: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    placeholder="예: 서울아산치과"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">대표자명 *</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.ceoName || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, ceoName: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">연락처 *</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.contactNumber || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, contactNumber: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    placeholder="02-000-0000"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">사업자등록번호</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.businessRegistrationNumber || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, businessRegistrationNumber: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">주소</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.address || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, address: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">마스터 이메일(아이디) *</label>
+                  <input 
+                    type="email" 
+                    value={newClientData.email || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, email: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    placeholder="admin@hospital.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">임시 비밀번호 *</label>
+                  <input 
+                    type="text" 
+                    value={newClientData.password || ''} 
+                    onChange={(e) => setNewClientData({...newClientData, password: e.target.value})}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Permissions */}
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-blue-600" />
+                    기본 메뉴 권한 설정
+                  </h4>
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {MENU_OPTIONS.map(menu => {
+                      const isChecked = (newClientData.accessibleMenus || []).includes(menu);
+                      return (
+                        <label 
+                          key={menu} 
+                          className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-pointer hover:bg-white hover:border-blue-300 ${isChecked ? 'bg-white border-blue-500 shadow-sm' : 'border-slate-200 opacity-60'}`}
+                        >
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                            checked={isChecked}
+                            onChange={() => handleNewClientMenuToggle(menu)}
+                          />
+                          <span className={`text-sm font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
+                            {menu}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="px-6 py-2 bg-white border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm shadow-sm"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detail Popup Modal */}
       {selectedHospital && (
