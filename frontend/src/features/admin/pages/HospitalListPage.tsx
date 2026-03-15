@@ -31,7 +31,16 @@ export const HospitalListPage: React.FC = () => {
     accessibleMenus: ['원장실', '경영지원실', '데스크']
   });
 
-  const MENU_OPTIONS = ['원장실', '경영지원실', '진료실', '기공실', '데스크', '중앙공급실', '상담실', '마이오피스'];
+  const MENU_OPTIONS = [
+    { id: 'director', label: '원장실' },
+    { id: 'management', label: '경영지원실' },
+    { id: 'clinic', label: '진료실' },
+    { id: 'lab', label: '기공실' },
+    { id: 'desk', label: '데스크' },
+    { id: 'supply', label: '중앙공급실' },
+    { id: 'counsel', label: '상담실' },
+    { id: 'myoffice', label: '마이오피스' }
+  ];
 
   useEffect(() => {
     fetchApprovedHospitals();
@@ -107,7 +116,7 @@ export const HospitalListPage: React.FC = () => {
       setShowAddModal(false);
       setNewClientData({
         status: 'APPROVED',
-        accessibleMenus: ['원장실', '경영지원실', '데스크']
+        accessibleMenus: ['director', 'management', 'desk']
       });
       fetchApprovedHospitals(); // 목록 새로고침
     } catch (err: any) {
@@ -134,13 +143,13 @@ export const HospitalListPage: React.FC = () => {
     }
   };
 
-  const handleNewClientMenuToggle = (menu: string) => {
+  const handleNewClientMenuToggle = (menuId: string) => {
     setNewClientData(prev => {
       const menus = prev.accessibleMenus || [];
-      if (menus.includes(menu)) {
-        return { ...prev, accessibleMenus: menus.filter(m => m !== menu) };
+      if (menus.includes(menuId)) {
+        return { ...prev, accessibleMenus: menus.filter(m => m !== menuId) };
       } else {
-        return { ...prev, accessibleMenus: [...menus, menu] };
+        return { ...prev, accessibleMenus: [...menus, menuId] };
       }
     });
   };
@@ -340,20 +349,21 @@ export const HospitalListPage: React.FC = () => {
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {MENU_OPTIONS.map(menu => {
-                      const isChecked = (newClientData.accessibleMenus || []).includes(menu);
+                      // Support both new english IDs and legacy korean names
+                      const isChecked = (newClientData.accessibleMenus || []).includes(menu.id) || (newClientData.accessibleMenus || []).includes(menu.label);
                       return (
                         <label 
-                          key={menu} 
+                          key={menu.id} 
                           className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-pointer hover:bg-white hover:border-blue-300 ${isChecked ? 'bg-white border-blue-500 shadow-sm' : 'border-slate-200 opacity-60'}`}
                         >
                           <input 
                             type="checkbox" 
                             className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                             checked={isChecked}
-                            onChange={() => handleNewClientMenuToggle(menu)}
+                            onChange={() => handleNewClientMenuToggle(menu.id)}
                           />
                           <span className={`text-sm font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
-                            {menu}
+                            {menu.label}
                           </span>
                         </label>
                       );
@@ -570,13 +580,12 @@ export const HospitalListPage: React.FC = () => {
                 <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {MENU_OPTIONS.map(menu => {
-                      const isChecked = isEditing 
-                        ? (formData.accessibleMenus || []).includes(menu)
-                        : (selectedHospital.accessibleMenus || []).includes(menu);
+                      const checkList = isEditing ? (formData.accessibleMenus || []) : (selectedHospital.accessibleMenus || []);
+                      const isChecked = checkList.includes(menu.id) || checkList.includes(menu.label);
                         
                       return (
                         <label 
-                          key={menu} 
+                          key={menu.id} 
                           className={`flex items-center gap-2.5 p-3 rounded-lg border transition-all ${
                             isEditing ? 'cursor-pointer hover:bg-white hover:border-blue-300' : 'cursor-default'
                           } ${isChecked ? 'bg-white border-blue-500 shadow-sm' : 'border-slate-200 opacity-60'}`}
@@ -585,11 +594,11 @@ export const HospitalListPage: React.FC = () => {
                             type="checkbox" 
                             className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                             checked={isChecked}
-                            onChange={() => isEditing && handleMenuToggle(menu)}
+                            onChange={() => isEditing && handleMenuToggle(menu.id)}
                             disabled={!isEditing}
                           />
                           <span className={`text-sm font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
-                            {menu}
+                            {menu.label}
                           </span>
                         </label>
                       );
