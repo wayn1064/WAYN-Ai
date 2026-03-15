@@ -3,12 +3,79 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// 가입 요청 생성 (위성 시스템에서 호출)
+// 가입 요청 생성 (위성 시스템에서 호출 또는 본사 수동 추가)
 export const createRegistration = async (req: Request, res: Response) => {
-  // 이 엔드포인트는 더 이상 사용되지 않습니다.
-  // DENTi-Ai 등은 tenant.controller.ts의 joinTenant 라우트(/api/tenants/join)를 이용해
-  // 직접 Approval과 비활성 Tenant/User를 생성합니다.
-  res.status(400).json({ success: false, error: 'Depreciated API. Use /api/tenants/join instead.' });
+  const { 
+    hospitalName, 
+    ceoName, 
+    contactNumber, 
+    email, 
+    password, 
+    businessRegistrationNumber, 
+    address, 
+    accessibleMenus,
+    status
+  } = req.body;
+
+  try {
+    const defaultMenus = accessibleMenus || ['원장실', '경영지원실', '진료실', '기공실', '데스크', '중앙공급실', '상담실', '마이오피스'];
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create active tenant
+      const newTenant = await tx.tenant.create({
+        data: {
+          name: hospitalName,
+          solutionType: 'DENTi-Ai',
+          isActive: status === 'APPROVED' ? true : false
+        }
+      });
+
+      // 2. Create master user
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          name: ceoName,
+          role: 'ADMIN',
+          tenantId: newTenant.id,
+          isActive: status === 'APPROVED' ? true : false,
+          customClaims: {
+            role: 'ADMIN',
+            accessibleMenus: defaultMenus,
+            hospitalCode: hospitalName
+          }
+        }
+      });
+
+      // 3. Create Approval record
+      const newApproval = await tx.approval.create({
+        data: {
+          tenantId: newTenant.id,
+          title: `${hospitalName} 가입`,
+          type: 'JOIN_REQUEST',
+          status: status || 'PENDING',
+          requesterId: newUser.id,
+          resolvedAt: status === 'APPROVED' ? new Date() : null,
+          contentData: {
+            hospitalName,
+            ceoName,
+            contactNumber,
+            email,
+            password,
+            businessRegistrationNumber,
+            address,
+            accessibleMenus: defaultMenus
+          }
+        }
+      });
+
+      return { tenant: newTenant, user: newUser, approval: newApproval };
+    });
+
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error creating registration:', error);
+    res.status(500).json({ success: false, error: 'Failed to create registration' });
+  }
 };
 
 // 가입 승인 대기 목록 조회 (본사 관리자용)
