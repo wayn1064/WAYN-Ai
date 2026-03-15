@@ -6,7 +6,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { hospitalCode, email, password } = req.body;
 
     if (!hospitalCode || !email || !password) {
-      res.status(400).json({ error: '회원병원 ID, 이메일, 비밀번호는 필수입니다.' });
+      res.status(400).json({ error: '회원병원 식별정보(사업자등록번호), 이메일, 비밀번호는 필수입니다.' });
       return;
     }
 
@@ -26,8 +26,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // 승인될 때 관리자가 hospitalCode를 User 클래임 혹은 Tenant name에 적음.
     // 여기서는 tenant.name 과 매칭하거나 customClaims.hospitalCode 와 매칭
-    if (user.tenant.name !== hospitalCode && customClaims.hospitalCode !== hospitalCode) {
-        res.status(401).json({ error: '회원병원 ID가 올바르지 않습니다.' });
+    
+    let businessRegistrationNumber = null;
+    const approval = await prisma.approval.findFirst({
+      where: { tenantId: user.tenant.id, type: 'JOIN_REQUEST' }
+    });
+    
+    if (approval && approval.contentData) {
+      businessRegistrationNumber = (approval.contentData as any).businessRegistrationNumber;
+    }
+
+    if (
+      user.tenant.businessRegistrationNumber !== hospitalCode && 
+      customClaims.hospitalCode !== hospitalCode &&
+      businessRegistrationNumber !== hospitalCode
+    ) {
+        res.status(401).json({ error: '회원병원 식별정보(사업자등록번호)가 올바르지 않습니다.' });
         return;
     }
 

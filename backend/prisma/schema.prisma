@@ -15,6 +15,7 @@ generator client {
 model Tenant {
   id          String   @id @default(uuid())
   name        String   // 예: "서울치과", "강남 WAYN카페"
+  businessRegistrationNumber String? @unique // 예: "111-11-1111"
   solutionType String  // 예: "DENTi-Ai", "CAFEiN-Ai", "LOGiS-Ai"
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
