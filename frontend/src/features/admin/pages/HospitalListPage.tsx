@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock, Save, Edit2, Plus } from 'lucide-react';
+import { Building2, User, Phone, Mail, CheckCircle, XCircle, FileText, MapPin, Lock, Clock, Save, Edit2, Plus, Trash2 } from 'lucide-react';
 
 
 interface RegistrationRequest {
@@ -113,6 +113,23 @@ export const HospitalListPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to create new hospital', err);
       const errorMessage = err.response?.data?.error || '신규 거래처 등록 중 오류가 발생했습니다.';
+      alert(errorMessage);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedHospital) return;
+    if (!confirm('정말로 이 회원병원을 삭제하시겠습니까? 관련 데이터가 모두 삭제됩니다.')) return;
+    
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.delete(`${BASE_URL}/api/registrations/${selectedHospital.id}`);
+      alert('회원병원 데이터가 삭제되었습니다.');
+      setSelectedHospital(null);
+      fetchApprovedHospitals(); // 목록 새로고침
+    } catch (err: any) {
+      console.error('Failed to delete hospital info', err);
+      const errorMessage = err.response?.data?.error || '회원병원 삭제 중 오류가 발생했습니다.';
       alert(errorMessage);
     }
   };
@@ -372,12 +389,20 @@ export const HospitalListPage: React.FC = () => {
               </h3>
               <div className="flex items-center gap-2">
                 {!isEditing ? (
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                  >
-                    <Edit2 size={16} /> 수정하기
-                  </button>
+                  <>
+                    <button 
+                      onClick={handleDelete}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors mr-2"
+                    >
+                      <Trash2 size={16} /> 삭제하기
+                    </button>
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <Edit2 size={16} /> 수정하기
+                    </button>
+                  </>
                 ) : (
                   <button 
                     onClick={handleSave}

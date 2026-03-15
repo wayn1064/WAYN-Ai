@@ -272,3 +272,43 @@ export const updateRegistration = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to update registration' });
   }
 };
+
+// 가입 세부 정보 삭제 (본사 관리자용)
+export const deleteRegistration = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+
+  try {
+    const approval = await prisma.approval.findUnique({
+      where: { id },
+      include: { requester: true, tenant: true }
+    });
+
+    if (!approval) {
+      return res.status(404).json({ success: false, error: 'Approval request not found' });
+    }
+
+    const { tenantId } = approval;
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete all Approvals associated with the tenant
+      await tx.approval.deleteMany({
+        where: { tenantId }
+      });
+
+      // 2. Delete all Users associated with the tenant
+      await tx.user.deleteMany({
+        where: { tenantId }
+      });
+
+      // 3. Delete the Tenant
+      await tx.tenant.delete({
+        where: { id: tenantId }
+      });
+    });
+
+    res.status(200).json({ success: true, message: 'Registration deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting registration:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete registration' });
+  }
+};
