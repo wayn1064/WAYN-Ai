@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { CheckCircle, Clock, Building2, User, Phone, Mail, XCircle, FileText, MapPin, Lock } from 'lucide-react';
+import { CheckCircle, Clock, Building2, User, Phone, Mail, XCircle, FileText, MapPin, Lock, Layers } from 'lucide-react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 
 // API 통신을 위한 인터페이스 정의
@@ -13,6 +13,7 @@ interface RegistrationRequest {
   password?: string;
   businessRegistrationNumber?: string;
   address?: string;
+  accessibleMenus?: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requestedAt: string;
 }
@@ -119,9 +120,9 @@ export const RegistrationApprovalPage: React.FC = () => {
             <table className="w-full text-left">
               <thead className="bg-[#f8fafc] border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-sm font-bold text-slate-600">요청일시</th>
-                  <th className="px-6 py-4 text-sm font-bold text-slate-600">고객사 (병원명)</th>
-                  <th className="px-6 py-4 text-sm font-bold text-slate-600">대표자</th>
+                  <th className="px-6 py-4 text-sm font-bold text-slate-600">요청일</th>
+                  <th className="px-6 py-4 text-sm font-bold text-slate-600">병원이름</th>
+                  <th className="px-6 py-4 text-sm font-bold text-slate-600">대표원장 이름</th>
                   <th className="px-6 py-4 text-sm font-bold text-slate-600 text-center">액션</th>
                 </tr>
               </thead>
@@ -227,14 +228,14 @@ export const RegistrationApprovalPage: React.FC = () => {
                 <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
                   <Mail className="w-5 h-5 text-slate-400" />
                   <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 이메일(아이디)</p>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 아이디</p>
                     <span className="text-sm font-medium break-all">{selectedRequest.email}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2 sm:col-span-1">
                   <Lock className="w-5 h-5 text-slate-400" />
                   <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">마스터 비밀번호</p>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">관리자 비밀번호</p>
                     <span className="text-sm font-medium">{selectedRequest.password || '-'}</span>
                   </div>
                 </div>
@@ -242,8 +243,26 @@ export const RegistrationApprovalPage: React.FC = () => {
                 <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
                   <Clock className="w-5 h-5 text-slate-400" />
                   <div>
-                    <p className="text-xs text-slate-400 font-bold mb-0.5">요청일시</p>
+                    <p className="text-xs text-slate-400 font-bold mb-0.5">요청일</p>
                     <span className="text-sm font-medium">{new Date(selectedRequest.requestedAt).toLocaleString('ko-KR')}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 col-span-2">
+                  <Layers className="w-5 h-5 text-slate-400 mt-1" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400 font-bold mb-2">사용할 솔루션</p>
+                    {selectedRequest.accessibleMenus && selectedRequest.accessibleMenus.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedRequest.accessibleMenus.map((menu, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-blue-100 text-[#1A365D] text-xs font-semibold rounded-full border border-blue-200">
+                            {menu}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-slate-400">선택한 솔루션 없음</span>
+                    )}
                   </div>
                 </div>
               </div>
