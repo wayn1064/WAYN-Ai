@@ -107,7 +107,7 @@ export const getRegistrations = async (req: Request, res: Response) => {
       const content = req.contentData as any || {};
       return {
         id: req.id,
-        hospitalName: req.tenant.name || content.hospitalName,
+        hospitalName: content.hospitalName || req.tenant.name,
         ceoName: req.requester.name || content.ceoName || '관리자',
         contactNumber: content.contactNumber || '',
         email: req.requester.email,
@@ -258,13 +258,18 @@ export const updateRegistration = async (req: Request, res: Response) => {
         }
       });
 
-      // 3. Update Tenant Name if changed
-      const updatedTenant = await tx.tenant.update({
-        where: { id: approval.tenantId },
-        data: {
-          name: hospitalName || undefined
-        }
-      });
+      // 3. Update Tenant Name if changed (but don't overwrite if it's already an approved hospitalCode)
+      let updatedTenant;
+      if (approval.status !== 'APPROVED') {
+        updatedTenant = await tx.tenant.update({
+          where: { id: approval.tenantId },
+          data: {
+            name: hospitalName || undefined
+          }
+        });
+      } else {
+        updatedTenant = await tx.tenant.findUnique({ where: { id: approval.tenantId } });
+      }
 
       return { approval: updatedApproval, user: updatedUser, tenant: updatedTenant };
     });
