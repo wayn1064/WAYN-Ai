@@ -28,12 +28,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // 여기서는 tenant.name 과 매칭하거나 customClaims.hospitalCode 와 매칭
     
     let businessRegistrationNumber = null;
+    let realHospitalName = user.tenant.name;
     const approval = await prisma.approval.findFirst({
       where: { tenantId: user.tenant.id, type: 'JOIN_REQUEST' }
     });
     
     if (approval && approval.contentData) {
       businessRegistrationNumber = (approval.contentData as any).businessRegistrationNumber;
+      if ((approval.contentData as any).hospitalName) {
+        realHospitalName = (approval.contentData as any).hospitalName;
+      }
     }
 
     if (
@@ -68,7 +72,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         name: user.name,
         role: user.role,
         tenantId: user.tenant.id,
-        hospitalName: user.tenant.name,
+        hospitalName: realHospitalName,
         accessibleMenus: customClaims.accessibleMenus || [],
         token: 'mock-jwt-token-for-' + user.id
       }
