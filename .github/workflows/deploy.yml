@@ -1,0 +1,78 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main 
+
+env:
+  PROJECT_ID: wayn-492112
+  REGION: asia-northeast3
+  REPO_NAME: wayn-ai-repo
+  GCE_INSTANCE: "wayn-server"
+  GCE_ZONE: "asia-northeast3-a"
+  SERVICE_NAME: "wayn-ai"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: 'projects/966609209672/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions@wayn-492112.iam.gserviceaccount.com'
+
+      - name: Configure Docker
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGION }}-docker.pkg.dev
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+
+      - name: Build and Push Frontend
+        run: |
+          if [ -d "frontend" ]; then
+            docker build --platform linux/amd64 -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}-frontend:latest frontend/
+            docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}-frontend:latest
+          fi
+
+      - name: Build and Push Backend
+        run: |
+          if [ -d "backend" ]; then
+            docker build --platform linux/amd64 -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}-backend:latest backend/
+            docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}-backend:latest
+          fi
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/966609209672/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions@wayn-492112.iam.gserviceaccount.com'
+
+      - name: Deploy to GCE
+        run: |
+          echo "GCE 배포 시작..."
+          gcloud compute ssh wayn-ai@${{ env.GCE_INSTANCE }} --zone=${{ env.GCE_ZONE }} --command="
+            gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
+            cd ~/wayn-deployment
+            docker-compose -f GCE_docker-compose.prod.yml pull ${{ env.SERVICE_NAME }}-frontend ${{ env.SERVICE_NAME }}-backend
+            docker-compose -f GCE_docker-compose.prod.yml up -d ${{ env.SERVICE_NAME }}-frontend ${{ env.SERVICE_NAME }}-backend
+          "
