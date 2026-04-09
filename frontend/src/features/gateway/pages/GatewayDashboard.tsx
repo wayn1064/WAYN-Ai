@@ -9,7 +9,8 @@ import {
   BriefcaseMedical, 
   Gift, 
   Image as ImageIcon, 
-  Truck 
+  Truck,
+  LogOut
 } from 'lucide-react';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
@@ -81,7 +82,7 @@ const SOLUTIONS = [
 ];
 
 export const GatewayDashboard: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -122,6 +123,13 @@ export const GatewayDashboard: React.FC = () => {
             <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-[#1A365D] font-bold">
               {currentUser?.name.charAt(0)}
             </div>
+            <button 
+              onClick={logout}
+              className="ml-2 p-2 text-slate-500 hover:text-red-500 hover:bg-slate-100 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#1A365D]"
+              title="로그아웃"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
       </header>
