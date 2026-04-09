@@ -36,7 +36,7 @@ const SOLUTIONS = [
     title: 'CAFEiN-Ai',
     description: '프랜차이즈 카페 통합 본사/가맹점 관리 솔루션',
     icon: <Coffee size={28} />,
-    isActive: false,
+    isActive: true,
     path: '/cafein-dashboard',
   },
   {
