@@ -21,10 +21,11 @@ export const LoginPage: React.FC = () => {
       // 짧은 지연으로 실제 인증 요청처럼 보이게 Mocking
       await new Promise(resolve => setTimeout(resolve, 600));
 
-      const masterId = import.meta.env.VITE_MASTER_ID;
-      const masterPassword = import.meta.env.VITE_MASTER_PASSWORD;
+      const masterId = import.meta.env.VITE_MASTER_ID || '1';
+      const masterPassword = import.meta.env.VITE_MASTER_PASSWORD || '1';
 
-      if (userId === masterId && password === masterPassword) {
+      // 환경 변수 마스터 계정 또는 '1' / '1' 이면 통과
+      if ((userId === masterId && password === masterPassword) || (userId === '1' && password === '1')) {
         // 성공 시 AuthContext 에 최고 관리자 정보 세팅
         login({
           id: 'admin_1',

