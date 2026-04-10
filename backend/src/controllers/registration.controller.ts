@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
 
 const prisma = new PrismaClient();
 
@@ -198,6 +199,27 @@ export const approveRegistration = async (req: Request, res: Response) => {
 
       return { approval: updatedApproval, tenant: updatedTenant, user: updatedUser };
     });
+
+    // CAFEiN-Ai 타겟인 경우 직접 해당 분리된 시스템 DB로 정보 넘김 (동기화)
+    if (result.tenant.solutionType === 'CAFEiN-Ai') {
+      try {
+        const contentData: any = result.approval.contentData || {};
+        await axios.post('http://cafein-ai-backend:5003/api/auth/register-tenant', {
+          cafeName: result.tenant.name,
+          cafeId: hospitalCode, // 발급된 매장코드
+          loginId: contentData.email,
+          password: contentData.password, 
+          businessRegistrationNumber: contentData.businessRegistrationNumber,
+          phone: contentData.contactNumber,
+          address: contentData.address,
+          ownerName: contentData.ceoName
+        });
+        console.log(`Successfully synced tenant ${hospitalCode} to CAFEiN-Ai isolated system`);
+      } catch (syncError) {
+        console.error('Failed to sync CAFEiN-Ai new branch:', syncError);
+        // 동기화 실패해도 일단 중앙 DB 승인은 된 것이므로 반환은 200으로 진행하되, 백로그를 남김.
+      }
+    }
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {

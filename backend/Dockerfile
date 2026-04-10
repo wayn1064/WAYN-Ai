@@ -21,5 +21,6 @@ RUN npm run build
 
 # Use port 5001 as required by WAYN-Ai ecosystem rules
 EXPOSE 5001
+ENV PORT=5001
 
 CMD ["npm", "start"]
