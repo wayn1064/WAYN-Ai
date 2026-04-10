@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 # Prisma requires openssl
 RUN apk add --no-cache openssl
-RUN npm ci
+RUN npm install
 
 # Copy Prisma schema and generate client
 COPY prisma ./prisma/
