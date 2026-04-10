@@ -11,6 +11,7 @@ export interface CafeUser {
   requestDate: string;
   message?: string;
   accessibleMenus?: string[];
+  address?: string;
 }
 
 // 초기 대기자 데이터 모사
@@ -24,6 +25,7 @@ export const initialPendingUsers: CafeUser[] = [
     status: 'PENDING',
     requestDate: '2026.03.13',
     message: '신규 매장 계정 승인 요청합니다.',
+    address: '서울시 강남구 테헤란로 123',
   },
   {
     id: 'req_2',
@@ -34,6 +36,7 @@ export const initialPendingUsers: CafeUser[] = [
     status: 'PENDING',
     requestDate: '2026.03.12',
     message: '가맹점 승인 요청',
+    address: '서울시 마포구 홍익로 45',
   },
 ];
 
@@ -47,7 +50,8 @@ export const initialApprovedUsers: CafeUser[] = [
     contact: '010-0000-0000',
     status: 'APPROVED',
     requestDate: '2025.01.01',
-    accessibleMenus: ['dashboard', 'approvals', 'cafes', 'settings']
+    accessibleMenus: ['dashboard', 'approvals', 'cafes', 'settings'],
+    address: '서울시 서대문구 신촌로 78',
   }
 ];
 

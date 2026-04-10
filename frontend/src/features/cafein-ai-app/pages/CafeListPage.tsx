@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, CheckCircle, Lock } from 'lucide-react';
+import { Building2, CheckCircle } from 'lucide-react';
 import { userStore, type CafeUser } from '../store/userStore';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
@@ -35,7 +35,7 @@ export const CafeListPage: React.FC = () => {
               <th className="px-6 py-4 text-sm font-bold text-slate-600">등록일</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">사업자등록번호</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">카페이름</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">권한 현황 (메뉴 접근)</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">주소</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600 text-right">상태</th>
             </tr>
           </thead>
@@ -58,17 +58,8 @@ export const CafeListPage: React.FC = () => {
                     <Building2 className="w-4 h-4 text-slate-400" />
                     {cafe.cafeName}
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {(cafe.accessibleMenus || []).map((menu, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold rounded flex items-center gap-1">
-                          <Lock size={10} /> {menu === 'dashboard' ? '대시보드' : menu === 'approvals' ? '승인관리' : menu === 'cafes' ? '카페목록' : '설정'}
-                        </span>
-                      ))}
-                      {(!cafe.accessibleMenus || cafe.accessibleMenus.length === 0) && (
-                        <span className="text-xs text-slate-400">권한 없음</span>
-                      )}
-                    </div>
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {cafe.address || '-'}
                   </td>
                   <td className="px-6 py-4 flex justify-end gap-2">
                     <span className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded-full">
