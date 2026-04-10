@@ -3,8 +3,8 @@
 
 export interface CafeUser {
   id: string;
-  name: string;
-  role: string;
+  businessNumber: string;
+  cafeName: string;
   email: string;
   contact: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -16,23 +16,23 @@ export interface CafeUser {
 export const initialPendingUsers: CafeUser[] = [
   {
     id: 'req_1',
-    name: '이실장',
-    role: 'USER',
+    businessNumber: '123-45-67890',
+    cafeName: '스타벅스 강남점',
     email: 'lee@cafeinai.kr',
     contact: '010-1111-2222',
     status: 'PENDING',
     requestDate: '2026.03.13',
-    message: '신규 매장 직원 계정 승인 요청합니다.',
+    message: '신규 매장 계정 승인 요청합니다.',
   },
   {
     id: 'req_2',
-    name: '박점주',
-    role: 'ADMIN',
+    businessNumber: '987-65-43210',
+    cafeName: '메가커피 홍대점',
     email: 'park@cafeinai.kr',
     contact: '010-3333-4444',
     status: 'PENDING',
     requestDate: '2026.03.12',
-    message: '바리스타 조인으로 인한 계정 발급',
+    message: '가맹점 승인 요청',
   },
 ];
 
@@ -40,8 +40,8 @@ export const initialPendingUsers: CafeUser[] = [
 export const initialApprovedUsers: CafeUser[] = [
   {
     id: 'usr_1',
-    name: '김점주',
-    role: 'ADMIN',
+    businessNumber: '111-22-33333',
+    cafeName: '투썸플레이스 신촌점',
     email: 'kim@cafeinai.kr',
     contact: '010-0000-0000',
     status: 'APPROVED',

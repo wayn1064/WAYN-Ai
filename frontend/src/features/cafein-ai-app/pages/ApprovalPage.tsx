@@ -29,7 +29,7 @@ export const ApprovalPage: React.FC = () => {
         setSelectedUser(null);
       }
       
-      alert(`${approvedUser.name}님의 가입이 승인되었습니다.`);
+      alert(`${approvedUser.cafeName} 매장의 가입이 승인되었습니다.`);
     }
   };
 
@@ -50,8 +50,8 @@ export const ApprovalPage: React.FC = () => {
           <thead className="bg-[#f8fafc] border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">요청일</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">이름</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">직책/권한</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">사업자등록번호</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">카페이름</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">요청 메시지</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600 text-right">상태/액션</th>
             </tr>
@@ -73,14 +73,11 @@ export const ApprovalPage: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-slate-500">{req.requestDate}</td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    {req.name}
+                    {req.businessNumber}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 flex items-center gap-1 w-max text-xs font-bold rounded ${
-                      req.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {req.role === 'ADMIN' && <Shield size={12} />}
-                      {req.role}
+                    <span className="px-2 py-1 flex items-center gap-1 w-max text-xs font-bold rounded bg-blue-100 text-blue-700">
+                      {req.cafeName}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.message}</td>
@@ -128,9 +125,9 @@ export const ApprovalPage: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-xl font-bold text-slate-800">{selectedUser.name}</h4>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${selectedUser.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {selectedUser.role}
+                    <h4 className="text-xl font-bold text-slate-800">{selectedUser.businessNumber}</h4>
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700">
+                      {selectedUser.cafeName}
                     </span>
                   </div>
                   <p className="text-sm text-slate-500 mt-1">요청일: {selectedUser.requestDate}</p>

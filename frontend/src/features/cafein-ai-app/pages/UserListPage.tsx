@@ -34,8 +34,8 @@ export const UserListPage: React.FC = () => {
           <thead className="bg-[#f8fafc] border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">등록일</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">이름</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">직책/권한</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">사업자등록번호</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">카페이름</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">이메일 계정</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600 text-right">상태</th>
             </tr>
@@ -54,14 +54,11 @@ export const UserListPage: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-slate-500">{user.requestDate}</td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    {user.name}
+                    {user.businessNumber}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 flex items-center gap-1 w-max text-xs font-bold rounded ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {user.role === 'ADMIN' && <Shield size={12} />}
-                      {user.role}
+                    <span className="px-2 py-1 flex items-center gap-1 w-max text-xs font-bold rounded bg-blue-100 text-blue-700">
+                      {user.cafeName}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">{user.email}</td>
