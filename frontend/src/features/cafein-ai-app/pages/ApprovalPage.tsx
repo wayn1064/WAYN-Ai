@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, User, Shield, Phone, Mail } from 'lucide-react';
+import { CheckCircle, XCircle, User, Phone, Mail } from 'lucide-react';
 import { userStore, type CafeUser } from '../store/userStore';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 

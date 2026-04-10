@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, CheckCircle, Shield } from 'lucide-react';
+import { User, CheckCircle } from 'lucide-react';
 import { userStore, type CafeUser } from '../store/userStore';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
