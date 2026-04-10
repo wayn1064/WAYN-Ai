@@ -71,7 +71,7 @@ export const Sidebar: React.FC = () => {
         </NavLink>
 
         <NavLink
-          to="/admin/hospitals"
+          to="/cafein-dashboard/cafes"
           className={({ isActive }) =>
             `flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
               isActive 

@@ -17,6 +17,7 @@ import { CafeinLayout } from './features/cafein-ai-app/components/CafeinLayout';
 import { CafeinDashboardPage } from './features/cafein-ai-app/pages/CafeinDashboardPage';
 import { ApprovalPage as CafeinApprovalPage } from './features/cafein-ai-app/pages/ApprovalPage';
 import { UserListPage as CafeinUserListPage } from './features/cafein-ai-app/pages/UserListPage';
+import { CafeListPage } from './features/cafein-ai-app/pages/CafeListPage';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
               <Route index element={<CafeinDashboardPage />} />
               <Route path="approvals" element={<CafeinApprovalPage />} />
               <Route path="users" element={<CafeinUserListPage />} />
+              <Route path="cafes" element={<CafeListPage />} />
             </Route>
             
             {/* WAYN-Ai Admin Routes */}
