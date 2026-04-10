@@ -33,7 +33,7 @@ export const ApprovalPage: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
       // solutionType 쿼리로 CAFEiN-Ai만 필터링해서 가져옴
       const response = await axios.get(`${BASE_URL}/api/registrations?solutionType=CAFEiN-Ai`);
       setRequests(response.data.data.filter((req: RegistrationRequest) => req.status === 'PENDING'));
@@ -61,7 +61,7 @@ export const ApprovalPage: React.FC = () => {
     }
 
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
       // 백엔드는 hospitalCode 필드를 받아 tenant.name 등을 갱신함
       await axios.post(`${BASE_URL}/api/registrations/${id}/approve`, { hospitalCode });
       alert(`${cafeName} 매장의 가입이 승인되었습니다.`);

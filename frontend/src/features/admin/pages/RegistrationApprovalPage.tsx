@@ -35,7 +35,7 @@ export const RegistrationApprovalPage: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
       const response = await axios.get(`${BASE_URL}/api/registrations`);
       setRequests(response.data.data.filter((req: RegistrationRequest) => req.status === 'PENDING'));
       setError(null);
@@ -62,7 +62,7 @@ export const RegistrationApprovalPage: React.FC = () => {
     }
 
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
       await axios.post(`${BASE_URL}/api/registrations/${id}/approve`, { hospitalCode });
       alert(`${hospitalName} 측의 가입이 승인되었으며, [${hospitalCode}] 회원병원 ID가 성공적으로 부여되었습니다.`);
       

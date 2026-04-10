@@ -96,10 +96,18 @@ export const joinTenant = async (req: Request, res: Response): Promise<void> => 
 // 승인된(활성화된) 회원병원(Tenant) 목록 조회 (WAYN-Ai 관리자용)
 export const getApprovedTenants = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { solutionType } = req.query;
+    
+    // 조건 객체 동적 생성
+    const whereCondition: any = {
+      isActive: true,
+    };
+    if (solutionType) {
+      whereCondition.solutionType = solutionType as string;
+    }
+
     const tenants = await prisma.tenant.findMany({
-      where: {
-        isActive: true,
-      },
+      where: whereCondition,
       orderBy: {
         createdAt: 'desc',
       },
