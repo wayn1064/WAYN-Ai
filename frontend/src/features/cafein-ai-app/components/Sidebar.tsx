@@ -22,7 +22,7 @@ export const Sidebar: React.FC = () => {
         </div>
         <div>
           <h2 className="text-xl font-black tracking-tight leading-tight">CAFEiN-Ai</h2>
-          <p className="text-[10px] text-blue-300 font-medium">Dental Auto System</p>
+          <p className="text-[10px] text-blue-300 font-medium">Cafe Auto System</p>
         </div>
       </div>
 

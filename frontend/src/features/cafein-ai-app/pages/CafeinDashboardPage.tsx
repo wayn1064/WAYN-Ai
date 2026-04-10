@@ -18,8 +18,8 @@ export const CafeinDashboardPage: React.FC = () => {
             <Users size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">신규 환자</p>
-            <p className="text-2xl font-bold text-slate-800">12명</p>
+            <p className="text-sm font-medium text-slate-500">신규 가맹점</p>
+            <p className="text-2xl font-bold text-slate-800">12개</p>
           </div>
         </div>
 
@@ -38,7 +38,7 @@ export const CafeinDashboardPage: React.FC = () => {
             <Calendar size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">금일 예약</p>
+            <p className="text-sm font-medium text-slate-500">금일 재고확인</p>
             <p className="text-2xl font-bold text-slate-800">45건</p>
           </div>
         </div>
