@@ -14,7 +14,8 @@ export const createRegistration = async (req: Request, res: Response) => {
     businessRegistrationNumber, 
     address, 
     accessibleMenus,
-    status
+    status,
+    solutionType
   } = req.body;
 
   try {
@@ -31,7 +32,7 @@ export const createRegistration = async (req: Request, res: Response) => {
       const newTenant = await tx.tenant.create({
         data: {
           name: hospitalName,
-          solutionType: 'DENTi-Ai',
+          solutionType: solutionType || 'DENTi-Ai',
           isActive: status === 'APPROVED' ? true : false
         }
       });
@@ -91,10 +92,20 @@ export const createRegistration = async (req: Request, res: Response) => {
 // 가입 승인 대기 목록 조회 (본사 관리자용)
 export const getRegistrations = async (req: Request, res: Response) => {
   try {
+    const { solutionType } = req.query;
+
+    const whereClause: any = {
+      type: 'JOIN_REQUEST',
+    };
+    
+    if (solutionType) {
+      whereClause.tenant = {
+        solutionType: solutionType as string
+      };
+    }
+
     const requests = await prisma.approval.findMany({
-      where: {
-        type: 'JOIN_REQUEST',
-      },
+      where: whereClause,
       orderBy: { requestedAt: 'desc' },
       include: {
         tenant: true,

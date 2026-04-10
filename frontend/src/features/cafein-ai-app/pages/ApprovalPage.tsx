@@ -1,51 +1,115 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, User, Phone, Mail } from 'lucide-react';
-import { userStore, type CafeUser } from '../store/userStore';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { CheckCircle, XCircle, User, Phone, Mail, Building, MapPin, Clock } from 'lucide-react';
+import { useAuth } from '../../../shared/contexts/AuthContext';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
+interface RegistrationRequest {
+  id: string;
+  hospitalName: string; // 맵핑된 카페(매장)명
+  ceoName: string;
+  contactNumber: string;
+  email: string;
+  businessRegistrationNumber?: string;
+  address?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  requestedAt: string;
+}
+
 export const ApprovalPage: React.FC = () => {
-  const [requests, setRequests] = useState<CafeUser[]>(userStore.pendingUsers);
-  const [selectedUser, setSelectedUser] = useState<CafeUser | null>(null);
+  const { currentUser } = useAuth();
+  const [requests, setRequests] = useState<RegistrationRequest[]>([]);
+  const [selectedUser, setSelectedUser] = useState<RegistrationRequest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 권한 체크 (ADMIN)
+  const isAdmin = currentUser?.customClaims?.role === 'ADMIN';
 
   useEffect(() => {
-    // 마운트 시 최신 데이터로 업데이트
-    setRequests([...userStore.pendingUsers]);
+    fetchRequests();
   }, []);
 
-  const handleApprove = (id: string, e?: React.MouseEvent) => {
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      // solutionType 쿼리로 CAFEiN-Ai만 필터링해서 가져옴
+      const response = await axios.get(`${BASE_URL}/api/registrations?solutionType=CAFEiN-Ai`);
+      setRequests(response.data.data.filter((req: RegistrationRequest) => req.status === 'PENDING'));
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch cafein requests', err);
+      setError('가입 요청 목록을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: string, cafeName: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     
-    // Store 업데이트
-    const approvedUser = userStore.approveUser(id);
-    if (approvedUser) {
-      // 로컬 상태 업데이트
-      setRequests([...userStore.pendingUsers]);
+    if (!isAdmin) {
+      alert('접근 권한이 없습니다. 관리자만 승인할 수 있습니다.');
+      return;
+    }
+
+    const hospitalCode = window.prompt(`[${cafeName}] 측에 부여할 고유 '매장 코드 (예: CB-001)'를 입력해주세요.`);
+    if (!hospitalCode) {
+      alert('입력이 취소되어 승인이 중단되었습니다.');
+      return;
+    }
+
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      // 백엔드는 hospitalCode 필드를 받아 tenant.name 등을 갱신함
+      await axios.post(`${BASE_URL}/api/registrations/${id}/approve`, { hospitalCode });
+      alert(`${cafeName} 매장의 가입이 승인되었습니다.`);
       
-      // PubSub 이벤트 발행하여 UserListPage 등 다른 컴포넌트에 알림
-      mockPubSub.publish('USER_APPROVED', approvedUser);
+      mockPubSub.publish('USER_APPROVED', { id, cafeName });
       
-      // 혹시 해당 유저의 팝업이 떠있었다면 닫기
       if (selectedUser?.id === id) {
         setSelectedUser(null);
       }
       
-      alert(`${approvedUser.cafeName} 매장의 가입이 승인되었습니다.`);
+      fetchRequests(); // 목록 새로고침
+    } catch (err: any) {
+      console.error('Failed to approve registration', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert('승인 처리 중 오류가 발생했습니다.');
+      }
     }
   };
 
   const handleReject = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    alert(`유저 ID ${id} 반려 처리는 아직 구현되지 않았습니다.`);
+    alert(`유저 ID ${id} 반려 처리는 추후 구현 예정입니다.`);
   };
 
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-2xl font-black text-[#1A365D] tracking-tight">가입 승인 관리</h1>
-        <p className="text-slate-500 mt-1">CAFEiN-Ai 시스템 접근을 요청한 신규 가입 대기자 목록입니다.</p>
+        <p className="text-slate-500 mt-1">CAFEiN-Ai 시스템 접근을 요청한 신규 가맹점(가입 대기자) 목록입니다.</p>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex justify-end bg-[#f8fafc]">
+          <button 
+            onClick={fetchRequests}
+            className="text-sm text-slate-500 hover:text-blue-600 transition-colors bg-white px-3 py-1.5 border border-slate-200 rounded-lg shadow-sm"
+          >
+            새로고침
+          </button>
+        </div>
         <table className="w-full text-left">
           <thead className="bg-[#f8fafc] border-b border-slate-200">
             <tr>
@@ -57,9 +121,12 @@ export const ApprovalPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {requests.length === 0 ? (
+            {loading ? (
+              <tr><td colSpan={5} className="p-12 text-center text-slate-400">데이터를 불러오는 중입니다...</td></tr>
+            ) : requests.length === 0 ? (
               <tr className="hover:bg-slate-50 transition-colors">
                 <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                  <CheckCircle className="w-12 h-12 mx-auto text-slate-300 mb-3" />
                   대기 중인 가입 요청이 없습니다.
                 </td>
               </tr>
@@ -70,21 +137,30 @@ export const ApprovalPage: React.FC = () => {
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
                   onClick={() => setSelectedUser(req)}
                 >
-                  <td className="px-6 py-4 text-sm text-slate-500">{req.requestDate}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">
+                    {new Date(req.requestedAt).toLocaleString('ko-KR')}
+                  </td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    {req.businessNumber}
+                    {req.businessRegistrationNumber || '-'}
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2 py-1 flex items-center gap-1 w-max text-xs font-bold rounded bg-blue-100 text-blue-700">
-                      {req.cafeName}
+                      {req.hospitalName}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{req.message}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                    신규 매장 계정 등록을 요청합니다.
+                  </td>
                   <td className="px-6 py-4 flex justify-end gap-2">
                     <button 
-                      onClick={(e) => handleApprove(req.id, e)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-[#1A365D] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition-colors"
+                      onClick={(e) => handleApprove(req.id, req.hospitalName, e)}
+                      className={`flex items-center gap-1 px-3 py-1.5 font-bold rounded-lg transition-all text-xs ${
+                        isAdmin 
+                          ? 'bg-[#1A365D] text-white hover:bg-blue-900 shadow-sm' 
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                      }`}
+                      disabled={!isAdmin}
                     >
                       <CheckCircle size={14} /> 승인
                     </button>
@@ -111,7 +187,7 @@ export const ApprovalPage: React.FC = () => {
           >
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#f8fafc]">
               <h3 className="text-xl font-bold text-[#1A365D] flex items-center gap-2">
-                가입 요청 상세 정보
+                가맹점 가입 요청 상세
               </h3>
               <button onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-slate-600">
                 <XCircle size={24} />
@@ -121,46 +197,54 @@ export const ApprovalPage: React.FC = () => {
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-slate-400" />
+                  <Building className="w-8 h-8 text-slate-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-xl font-bold text-slate-800">{selectedUser.businessNumber}</h4>
+                    <h4 className="text-xl font-bold text-slate-800">{selectedUser.businessRegistrationNumber || '-'}</h4>
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700">
-                      {selectedUser.cafeName}
+                      {selectedUser.hospitalName}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500 mt-1">요청일: {selectedUser.requestDate}</p>
+                  <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                    <Clock size={12} /> {new Date(selectedUser.requestedAt).toLocaleString('ko-KR')}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 py-2">
                 <div className="flex items-center gap-3 text-slate-600">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-medium">대표자: {selectedUser.ceoName}</span>
+                </div>
+                <div className="flex items-center gap-3 text-slate-600">
                   <Phone className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm">{selectedUser.contact}</span>
+                  <span className="text-sm">{selectedUser.contactNumber}</span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
                   <Mail className="w-4 h-4 text-slate-400" />
                   <span className="text-sm">{selectedUser.email}</span>
                 </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h5 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">요청 메시지</h5>
-                <p className="text-sm text-slate-700 leading-relaxed">{selectedUser.message}</p>
+                <div className="flex items-center gap-3 text-slate-600">
+                  <MapPin className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm">{selectedUser.address}</span>
+                </div>
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
               <button 
                 onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors text-sm"
               >
                 닫기
               </button>
               <button 
-                onClick={() => handleApprove(selectedUser.id)}
-                className="px-4 py-2 bg-[#1A365D] text-white font-semibold rounded-lg hover:bg-blue-900 transition-colors flex items-center gap-2 shadow-sm"
+                onClick={(e) => handleApprove(selectedUser.id, selectedUser.hospitalName, e)}
+                className={`px-4 py-2 font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm text-sm ${
+                  isAdmin ? 'bg-[#1A365D] text-white hover:bg-blue-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                }`}
+                disabled={!isAdmin}
               >
                 <CheckCircle size={16} /> 이 사용자 승인하기
               </button>
