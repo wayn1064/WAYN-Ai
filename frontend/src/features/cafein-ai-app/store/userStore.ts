@@ -10,6 +10,7 @@ export interface CafeUser {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requestDate: string;
   message?: string;
+  accessibleMenus?: string[];
 }
 
 // 초기 대기자 데이터 모사
@@ -46,6 +47,7 @@ export const initialApprovedUsers: CafeUser[] = [
     contact: '010-0000-0000',
     status: 'APPROVED',
     requestDate: '2025.01.01',
+    accessibleMenus: ['dashboard', 'approvals', 'cafes', 'settings']
   }
 ];
 
@@ -59,6 +61,7 @@ class MockUserStore {
     if (userIndex > -1) {
       const user = this.pendingUsers[userIndex];
       user.status = 'APPROVED';
+      user.accessibleMenus = ['dashboard', 'approvals', 'cafes', 'settings'];
       this.approvedUsers.push(user);
       this.pendingUsers.splice(userIndex, 1);
       return user;
