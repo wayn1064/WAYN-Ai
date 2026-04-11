@@ -5,9 +5,9 @@ import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
 interface CafeUser {
   id: string;
-  businessRegistrationNumber?: string;
   name: string; // cafe name
   createdAt: string;
+  approvals?: { contentData?: any }[];
 }
 
 export const CafeListPage: React.FC = () => {
@@ -45,46 +45,53 @@ export const CafeListPage: React.FC = () => {
         <p className="text-slate-500 mt-1">현재 CAFEiN-Ai 시스템에 가입 승인되어 활성화된 가맹점 카페 목록입니다.</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table className="w-full text-left whitespace-nowrap min-w-max">
           <thead className="bg-[#f8fafc] border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 text-sm font-bold text-slate-600">등록일</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">회원매장 ID</th>
-              <th className="px-6 py-4 text-sm font-bold text-slate-600">사업자등록번호</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">카페 ID</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">카페이름</th>
+              <th className="px-6 py-4 text-sm font-bold text-slate-600">카페주소</th>
               <th className="px-6 py-4 text-sm font-bold text-slate-600 text-right">상태</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr><td colSpan={4} className="p-12 text-center text-slate-400">데이터를 불러오는 중입니다...</td></tr>
+              <tr><td colSpan={5} className="p-12 text-center text-slate-400">데이터를 불러오는 중입니다...</td></tr>
             ) : cafes.length === 0 ? (
               <tr className="hover:bg-slate-50 transition-colors">
-                <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                   <Building2 className="w-12 h-12 mx-auto text-slate-300 mb-3" />
                   등록된 회원카페가 없습니다.
                 </td>
               </tr>
-            ) : (
-              cafes.map((cafe) => (
-                <tr key={cafe.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-slate-500">
-                    {new Date(cafe.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-400" />
-                    {cafe.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
-                    {cafe.businessRegistrationNumber || '-'}
-                  </td>
-                  <td className="px-6 py-4 flex justify-end gap-2">
-                    <span className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded-full">
-                      <CheckCircle size={14} /> 활성
-                    </span>
-                  </td>
-                </tr>
-              ))
+              cafes.map((cafe) => {
+                const cafeName = cafe.approvals?.[0]?.contentData?.hospitalName || cafe.name;
+                const address = cafe.approvals?.[0]?.contentData?.address || '-';
+                return (
+                  <tr key={cafe.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {new Date(cafe.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-blue-700">
+                      {cafe.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                      {cafeName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 truncate max-w-xs">
+                      {address}
+                    </td>
+                    <td className="px-6 py-4 flex justify-end gap-2">
+                      <span className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded-full">
+                        <CheckCircle size={14} /> 활성
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

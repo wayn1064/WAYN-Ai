@@ -123,6 +123,12 @@ export const getApprovedTenants = async (req: Request, res: Response): Promise<v
             role: 'ADMIN'
           },
           take: 1
+        },
+        approvals: {
+          where: {
+            type: 'JOIN_REQUEST'
+          },
+          take: 1
         }
       }
     });
