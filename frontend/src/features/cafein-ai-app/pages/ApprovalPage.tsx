@@ -18,10 +18,13 @@ interface RegistrationRequest {
 
 export const ApprovalPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const [requests, setRequests] = useState<RegistrationRequest[]>([]);
+  const [allRequests, setAllRequests] = useState<RegistrationRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'REJECTED'>('PENDING');
   const [selectedUser, setSelectedUser] = useState<RegistrationRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const requests = allRequests.filter(req => req.status === activeTab);
 
   // 권한 체크 (ADMIN)
   const isAdmin = currentUser?.customClaims?.role === 'ADMIN';
@@ -36,7 +39,7 @@ export const ApprovalPage: React.FC = () => {
       const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
       // solutionType 쿼리로 CAFEiN-Ai만 필터링해서 가져옴
       const response = await axios.get(`${BASE_URL}/api/registrations?solutionType=CAFEiN-Ai`);
-      setRequests(response.data.data.filter((req: RegistrationRequest) => req.status === 'PENDING'));
+      setAllRequests(response.data.data);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch cafein requests', err);
@@ -83,9 +86,38 @@ export const ApprovalPage: React.FC = () => {
     }
   };
 
-  const handleReject = (id: string, e?: React.MouseEvent) => {
+  const handleReject = async (id: string, cafeName: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    alert(`유저 ID ${id} 반려 처리는 추후 구현 예정입니다.`);
+    
+    if (!isAdmin) {
+      alert('접근 권한이 없습니다. 관리자만 반려할 수 있습니다.');
+      return;
+    }
+
+    if (!window.confirm(`정말로 [${cafeName}] 매장의 가입을 반려하시겠습니까? 해당 매장은 시스템에 접속할 수 없게 됩니다.`)) {
+      return;
+    }
+
+    try {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
+      await axios.post(`${BASE_URL}/api/registrations/${id}/reject`);
+      alert(`${cafeName} 매장의 가입이 반려되었습니다.`);
+      
+      mockPubSub.publish('USER_APPROVED', { id, cafeName }); // To refresh Sidebar pending counts
+      
+      if (selectedUser?.id === id) {
+        setSelectedUser(null);
+      }
+      
+      fetchRequests(); // 목록 새로고침
+    } catch (err: any) {
+      console.error('Failed to reject registration', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert('반려 처리 중 오류가 발생했습니다.');
+      }
+    }
   };
 
   return (
@@ -100,6 +132,22 @@ export const ApprovalPage: React.FC = () => {
           <p className="text-red-700">{error}</p>
         </div>
       )}
+
+      {/* 탭 네비게이션 */}
+      <div className="flex border-b border-slate-200 mb-6">
+        <button 
+          className={`px-6 py-3 font-bold text-sm transition-colors ${activeTab === 'PENDING' ? 'border-b-2 border-[#1A365D] text-[#1A365D]' : 'text-slate-500 hover:text-slate-700'}`}
+          onClick={() => setActiveTab('PENDING')}
+        >
+          대기 중인 요청
+        </button>
+        <button 
+          className={`px-6 py-3 font-bold text-sm transition-colors ${activeTab === 'REJECTED' ? 'border-b-2 border-red-600 text-red-600' : 'text-slate-500 hover:text-slate-700'}`}
+          onClick={() => setActiveTab('REJECTED')}
+        >
+          반려된 요청
+        </button>
+      </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex justify-end bg-[#f8fafc]">
@@ -127,7 +175,7 @@ export const ApprovalPage: React.FC = () => {
               <tr className="hover:bg-slate-50 transition-colors">
                 <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                   <CheckCircle className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                  대기 중인 가입 요청이 없습니다.
+                  {activeTab === 'PENDING' ? '대기 중인 가입 요청이 없습니다.' : '반려된 가입 요청이 없습니다.'}
                 </td>
               </tr>
             ) : (
@@ -153,23 +201,31 @@ export const ApprovalPage: React.FC = () => {
                     신규 매장 계정 등록을 요청합니다.
                   </td>
                   <td className="px-6 py-4 flex justify-end gap-2">
-                    <button 
-                      onClick={(e) => handleApprove(req.id, req.hospitalName, e)}
-                      className={`flex items-center gap-1 px-3 py-1.5 font-bold rounded-lg transition-all text-xs ${
-                        isAdmin 
-                          ? 'bg-[#1A365D] text-white hover:bg-blue-900 shadow-sm' 
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
-                      }`}
-                      disabled={!isAdmin}
-                    >
-                      <CheckCircle size={14} /> 승인
-                    </button>
-                    <button 
-                      onClick={(e) => handleReject(req.id, e)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <XCircle size={14} /> 반려
-                    </button>
+                    {activeTab === 'PENDING' ? (
+                      <>
+                        <button 
+                          onClick={(e) => handleApprove(req.id, req.hospitalName, e)}
+                          className={`flex items-center gap-1 px-3 py-1.5 font-bold rounded-lg transition-all text-xs ${
+                            isAdmin 
+                              ? 'bg-[#1A365D] text-white hover:bg-blue-900 shadow-sm' 
+                              : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                          }`}
+                          disabled={!isAdmin}
+                        >
+                          <CheckCircle size={14} /> 승인
+                        </button>
+                        <button 
+                          onClick={(e) => handleReject(req.id, req.hospitalName, e)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                          <XCircle size={14} /> 반려
+                        </button>
+                      </>
+                    ) : (
+                      <span className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded-lg">
+                        <XCircle size={14} /> 반려됨
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -239,15 +295,17 @@ export const ApprovalPage: React.FC = () => {
               >
                 닫기
               </button>
-              <button 
-                onClick={(e) => handleApprove(selectedUser.id, selectedUser.hospitalName, e)}
-                className={`px-4 py-2 font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm text-sm ${
-                  isAdmin ? 'bg-[#1A365D] text-white hover:bg-blue-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
-                }`}
-                disabled={!isAdmin}
-              >
-                <CheckCircle size={16} /> 이 사용자 승인하기
-              </button>
+              {activeTab === 'PENDING' && (
+                <button 
+                  onClick={(e) => handleApprove(selectedUser.id, selectedUser.hospitalName, e)}
+                  className={`px-4 py-2 font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm text-sm ${
+                    isAdmin ? 'bg-[#1A365D] text-white hover:bg-blue-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                  }`}
+                  disabled={!isAdmin}
+                >
+                  <CheckCircle size={16} /> 이 사용자 승인하기
+                </button>
+              )}
             </div>
           </div>
         </div>

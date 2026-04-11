@@ -228,6 +228,59 @@ export const approveRegistration = async (req: Request, res: Response) => {
   }
 };
 
+// 가입 반려 처리 (본사 관리자용)
+export const rejectRegistration = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+
+  try {
+    const approval = await prisma.approval.findUnique({
+      where: { id },
+      include: { requester: true }
+    });
+
+    if (!approval) {
+      return res.status(404).json({ success: false, error: 'Approval request not found' });
+    }
+    if (approval.status !== 'PENDING') {
+      return res.status(400).json({ success: false, error: 'Request is not pending' });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Approval 상태 REJECTED로 변경
+      const updatedApproval = await tx.approval.update({
+        where: { id },
+        data: {
+          status: 'REJECTED',
+          resolvedAt: new Date(),
+        },
+      });
+
+      // 2. Tenant 비활성화 강제
+      const updatedTenant = await tx.tenant.update({
+        where: { id: approval.tenantId },
+        data: {
+          isActive: false,
+        },
+      });
+
+      // 3. User 비활성화 강제
+      const updatedUser = await tx.user.update({
+        where: { id: approval.requesterId },
+        data: {
+          isActive: false,
+        },
+      });
+
+      return { approval: updatedApproval, tenant: updatedTenant, user: updatedUser };
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error rejecting registration:', error);
+    res.status(500).json({ success: false, error: 'Failed to reject registration' });
+  }
+};
+
 // 가입 세부 정보 및 권한 수정 (본사 관리자용)
 export const updateRegistration = async (req: Request, res: Response) => {
   const id = req.params.id as string;
