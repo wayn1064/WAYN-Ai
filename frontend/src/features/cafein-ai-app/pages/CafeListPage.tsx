@@ -66,6 +66,7 @@ export const CafeListPage: React.FC = () => {
                   등록된 회원카페가 없습니다.
                 </td>
               </tr>
+            ) : (
               cafes.map((cafe) => {
                 const cafeName = cafe.approvals?.[0]?.contentData?.hospitalName || cafe.name;
                 const address = cafe.approvals?.[0]?.contentData?.address || '-';
