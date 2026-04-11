@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { User, CheckCircle } from 'lucide-react';
-import { userStore, type CafeUser } from '../store/userStore';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
+interface CafeUser {
+  id: string;
+  businessNumber?: string;
+  cafeName: string;
+  email: string;
+  requestDate: string;
+}
+
 export const UserListPage: React.FC = () => {
-  const [users, setUsers] = useState<CafeUser[]>(userStore.approvedUsers);
+  const [users, setUsers] = useState<CafeUser[]>([]);
 
   useEffect(() => {
-    // 마운트 시 최신 데이터로 업데이트 (다른 페이지에서 승인 후 넘어왔을 때 반영)
-    setUsers([...userStore.approvedUsers]);
 
     // 실시간 이벤트 구독 (승인된 유저가 추가되면 상태 업데이트)
     const unsubscribe = mockPubSub.subscribe('USER_APPROVED', (newUser: CafeUser) => {

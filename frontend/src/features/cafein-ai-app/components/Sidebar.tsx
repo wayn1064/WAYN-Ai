@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, Settings, LogOut, Building2 } from 'lucide-react';
+import axios from 'axios';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
 export const Sidebar: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const BASE_URL = import.meta.env.VITE_API_URL || 'http://34.158.193.220/api/wayn-ai';
+        const response = await axios.get(`${BASE_URL}/api/registrations?solutionType=CAFEiN-Ai`);
+        if (response.data && response.data.data) {
+          const pending = response.data.data.filter((req: any) => req.status === 'PENDING').length;
+          setPendingCount(pending);
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending count', err);
+      }
+    };
+    
+    fetchPendingCount();
+
+    const unsubscribe = mockPubSub.subscribe('USER_APPROVED', () => {
+      fetchPendingCount();
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = () => {
     mockPubSub.publish('navigation', { from: 'cafein', to: 'gateway' });
@@ -66,8 +90,9 @@ export const Sidebar: React.FC = () => {
         >
           <CheckSquare size={20} className="mr-3 opacity-80 group-hover:opacity-100 transition-opacity" />
           <span className="flex-1">가입 승인 관리</span>
-          {/* Notification Badge Mock */}
-          <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+          {pendingCount > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{pendingCount}</span>
+          )}
         </NavLink>
 
         <NavLink
