@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Building2, CheckCircle, XCircle, Trash2, Save, X, Phone, Mail, MapPin, User, KeyRound, Clock } from 'lucide-react';
+import { Building2, CheckCircle, Trash2, Save, X, Phone, Mail, MapPin, User, KeyRound } from 'lucide-react';
 import { mockPubSub } from '../../../shared/utils/mockPubSub';
 
 interface CafeUser {
   id: string;
   name: string; // cafe name
   createdAt: string;
-  approvals?: { contentData?: any }[];
+  approvals?: { id: string; contentData?: any }[];
 }
 
 export const CafeListPage: React.FC = () => {
@@ -53,7 +53,7 @@ export const CafeListPage: React.FC = () => {
   const handleRowClick = (cafe: CafeUser) => {
     const approvalData = cafe.approvals?.[0]?.contentData || {};
     setFormData({
-      businessRegistrationNumber: approvalData.businessRegistrationNumber || cafe.businessRegistrationNumber || '',
+      businessRegistrationNumber: approvalData.businessRegistrationNumber || '',
       hospitalName: approvalData.hospitalName || cafe.name || '',
       ceoName: approvalData.ceoName || '',
       contactNumber: approvalData.contactNumber || '',
